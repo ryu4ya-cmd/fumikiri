@@ -49,14 +49,12 @@
   .world > svg.land { position: absolute; top: 0; left: 0; }
   .layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
   #sky { z-index: 0; }
-  #goalLayer { z-index: 1; }
   #backTraffic { z-index: 2; }
   #farTrains { z-index: 3; }
   #wires { z-index: 4; }
   #nearTrains { z-index: 5; }
   #xingLayer { z-index: 6; }
   #frontTraffic { z-index: 7; }
-  #actorLayer { z-index: 8; }
   .cloud { position: absolute; animation: drift 60s linear infinite; opacity: .95; }
   @keyframes drift { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
 
@@ -93,14 +91,10 @@
   .gatebox { position: absolute; background: linear-gradient(#f7f7f7, #d9dadc); border: 2px solid #8d8f94; border-radius: 4px; box-shadow: inset 0 -5px 0 #ffd200; pointer-events: none; }
   .arm.fast { transition: none; }
 
-  .veh, .actor, .goal { position: absolute; left: 0; top: 0; transform-origin: 0 0; line-height: 1; will-change: transform; }
+  .veh { position: absolute; left: 0; top: 0; transform-origin: 0 0; line-height: 1; will-change: transform; }
   .veh { pointer-events: auto; cursor: pointer; }
   .veh svg { display: block; width: 100%; height: 100%; }
-  .veh .inner, .actor .inner { display: block; width: 100%; height: 100%; }
-  .actor { pointer-events: auto; cursor: pointer; text-align: center; }
-  .actor .inner { font-size: 100%; }
-  .actor .shadow { position: absolute; left: 15%; right: 15%; bottom: -6%; height: 14%; border-radius: 50%; background: rgba(0,0,0,.18); z-index: -1; }
-  .goal { text-align: center; }
+  .veh .inner { display: block; width: 100%; height: 100%; }
 
   /* ---------- 画面の切り替え ---------- */
   .screen { position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: none; z-index: 10; pointer-events: none; }
@@ -154,7 +148,6 @@
   .big-btn .icon svg { height: 1em; width: auto; display: block; }
   .big-btn .label { font-size: 2.9vmin; font-size: clamp(11px, 2.9vmin, 22px); font-weight: 900; white-space: nowrap; }
   .big-btn.free { border: 6px solid #ef5a3c; }
-  .big-btn.cross { border: 6px solid #ffc107; }
   .big-btn.count { border: 6px solid #64b5f6; }
   .big-btn.book { border: 6px solid #8d6e63; }
 
@@ -235,7 +228,6 @@
   .cheer-sub { position: relative; margin-top: 1vmin; font-size: 6vmin; font-weight: 900; color: #fff; background: #ef5a3c; border-radius: 999px; padding: .1em .8em; box-shadow: 0 5px 0 rgba(0,0,0,.12); }
   #fx { position: fixed; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; overflow: hidden; z-index: 20; }
   #fx > span { position: absolute; line-height: 1; will-change: transform; }
-  #fx .ring { border-radius: 50%; border: 8px solid var(--c, #fff59d); }
 
   /* ---------- 保護者用 ---------- */
   .parent-btn {
@@ -291,14 +283,12 @@
 <div class="world" id="world">
   <div class="layer" id="sky"></div>
   <svg class="land" id="land" aria-hidden="true"></svg>
-  <div class="layer" id="goalLayer"></div>
   <div class="layer" id="backTraffic"></div>
   <div class="layer" id="farTrains"></div>
   <svg class="layer" id="wires" aria-hidden="true"></svg>
   <div class="layer" id="nearTrains"></div>
   <div class="layer" id="xingLayer"></div>
   <div class="layer" id="frontTraffic"></div>
-  <div class="layer" id="actorLayer"></div>
 </div>
 
 <!-- はじめる -->
@@ -316,13 +306,12 @@
   <h1 class="title">ふみきり <span class="kan">カンカン</span></h1>
   <div class="menu">
     <button class="big-btn free" data-mode="free"><span class="icon" id="xingIcon"></span><span class="label">ふみきり</span></button>
-    <button class="big-btn cross" data-mode="cross"><span class="icon">🐶</span><span class="label">わたれるかな？</span></button>
     <button class="big-btn count" data-mode="count"><span class="icon">🔢</span><span class="label">なんりょう？</span></button>
     <button class="big-btn book" data-mode="zukan"><span class="icon">📖</span><span class="label">でんしゃずかん</span></button>
   </div>
 </section>
 
-<!-- あそぶ画面（ふみきり・わたれるかな？・なんりょう？で共通） -->
+<!-- あそぶ画面（ふみきり・なんりょう？で共通） -->
 <section id="play" class="screen">
   <div class="topbar">
     <button class="round-btn" data-home aria-label="おうちにもどる">🏠</button>
@@ -943,17 +932,6 @@
     }
   }
   const sparkle = el => { const c = center(el); burst(c.x, c.y, ['✨', '💫', '⭐'], 8, Math.max(60, c.w * .8)); };
-  // わっか（ぽわん）
-  function ring(el, color) {
-    if (!room(2)) return;
-    const c = center(el);
-    for (let i = 0; i < 2; i++) {
-      const s = spawn('', { left: `${c.x}px`, top: `${c.y}px`, width: `${c.w}px`, height: `${c.w}px`, marginLeft: `${-c.w / 2}px`, marginTop: `${-c.w / 2}px` });
-      s.className = 'ring';
-      s.style.setProperty('--c', color || '#fff59d');
-      anim(s, [{ transform: 'scale(.5)', opacity: .9 }, { transform: 'scale(2.2)', opacity: 0 }], { duration: 1100, delay: i * 250, fill: 'backwards' }).onfinish = () => s.remove();
-    }
-  }
   function fireworks() {
     for (let i = 0; i < 3; i++) {
       setTimeout(() => burst(innerWidth * (.2 + Math.random() * .6), innerHeight * (.15 + Math.random() * .3), ['✨', '🎇', '⭐', '💥'], 10, 110, [20, 36]), i * 500);
@@ -1643,13 +1621,6 @@
     surechigai: 'すれちがった！',
     newTrain: 'あたらしい　でんしゃ！',
     oi: 'おーい！',
-    crossHello: 'ふみきりを　わたってみよう！',
-    wait: 'まって！　カンカン　なってるよ！',
-    nowGo: 'カンカンが　とまったよ。　わたれるかな？',
-    checkLR: 'みぎ　よし！　ひだり　よし！',
-    go: 'しゅっぱーつ！',
-    arrived: 'わたれたね！',
-    crossFinale: 'ぜんぶ　わたれたね！　ふみきりの　めいじん！',
     countHello: 'でんしゃは　なんりょう　かな？　いっしょに　かぞえよう！',
     countAsk: 'なんりょう　だった？',
     thisWay: 'こっちだよー。',
@@ -1658,12 +1629,6 @@
     zukanAll: 'ぜんぶの　でんしゃに　あえたね！　すごい！',
     notYet: 'まだ　あって　いない　でんしゃだよ。',
   };
-  const FRIENDS = [
-    { e: '🐶', n: 'いぬさん' }, { e: '🐱', n: 'ねこさん' }, { e: '🐰', n: 'うさぎさん' },
-    { e: '🐻', n: 'くまさん' }, { e: '🐼', n: 'ぱんださん' }, { e: '🐷', n: 'ぶたさん' },
-  ];
-  const wantLine = f => `${f.n}が　むこうに　いきたいって。`;
-  const GOALS = ['🏠', '🛝', '🍦', '🏫', '🎪', '🍰'];
   const COUNT = ['いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち'];
   const RYO = ['いちりょう', 'にりょう', 'さんりょう', 'よんりょう', 'ごりょう', 'ろくりょう', 'ななりょう', 'はちりょう'];
   const streakLine = n => `${n}かい、れんぞく！`;
@@ -1688,8 +1653,6 @@
     clearTimeout(cheerTimer);
     $('#cheer').hidden = true;
     XING.reset();
-    $('#actorLayer').innerHTML = '';
-    $('#goalLayer').innerHTML = '';
     $('#choices').hidden = true;
     $('#choices').innerHTML = '';
     clearTimeout(idleTimer);
@@ -1763,7 +1726,6 @@
   }
   function worldTap() {
     if (mode === 'free') freeRun();
-    else if (mode === 'cross') crossTap(false);
   }
   async function freeRun() {
     if (busy) return;
@@ -1814,145 +1776,7 @@
     armIdle();
   }
 
-  // ---------- ② わたれるかな？（踏切が あいてから わたる） ----------
-  let crossState = '', crossCtx = null;
-  async function goCross() {
-    show('play');
-    mode = 'cross';
-    setTop({ progress: true, ask: true });
-    renderProgress(0);
-    const my = flow;
-    const st = { streak: 0 };
-    const friends = shuffle(FRIENDS);
-    await say(P.crossHello);
-    for (let round = 0; round < ROUNDS; round++) {
-      if (my !== flow) return;
-      await crossRound(friends[round % friends.length], round, st);
-      if (my !== flow) return;
-      renderProgress(round + 1);
-      await wait(600);
-    }
-    if (my !== flow) return;
-    cheer('めいじん！', { stamp: '🏆', big: true });
-    await say(P.crossFinale);
-    await wait(2500);
-    if (my === flow) goHome();
-  }
-  function crossRound(friend, round, st) {
-    const my = flow;
-    return new Promise(async resolve => {
-      st.missed = false;
-      // むこうがわの 行きたいところ
-      const goal = document.createElement('div');
-      goal.className = 'goal';
-      goal.textContent = pick(GOALS);
-      const gs = G.R * .75;
-      goal.style.cssText = `width:${f1(gs)}px;height:${f1(gs)}px;font-size:${f1(gs * .9)}px`;
-      $('#goalLayer').innerHTML = '';
-      $('#goalLayer').appendChild(goal);
-      placeOnRoad(goal, G.horizonY + G.carH * .06, -.2);
-      // わたりたい おともだち
-      const el = document.createElement('div');
-      el.className = 'actor';
-      el.setAttribute('role', 'button');
-      el.setAttribute('aria-label', friend.n);
-      const as = G.R * .6;
-      el.style.cssText = `width:${f1(as)}px;height:${f1(as)}px;font-size:${f1(as * .86)}px`;
-      el.innerHTML = `<span class="inner">${friend.e}</span><span class="shadow"></span>`;
-      $('#actorLayer').innerHTML = '';
-      $('#actorLayer').appendChild(el);
-      const y0 = Math.min(G.H - 12, G.stopNear + G.carH * .55);
-      placeOnRoad(el, y0, -.2);
-      anim(el.firstChild, [{ transform: 'translateY(60%) scale(.3)', opacity: 0 }, { transform: 'translateY(-15%) scale(1.1)', opacity: 1, offset: .6 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: 700 });
-      crossCtx = { el, goal, friend, y0, resolve, st, my };
-      onPress(el, () => crossTap(true));
-      crossState = 'intro';
-      askAgain = () => say(crossState === 'go' ? P.nowGo : crossState === 'wait' ? P.wait : wantLine(friend));
-      await say(wantLine(friend));
-      if (my !== flow) return;
-      // 電車の来かた：1本、または2本（あとから もう1本 来る）
-      const a = pick(TRAINS.filter(t => t.id !== 'nagai')), dir = Math.random() < .5 ? 1 : -1;
-      const list = [{ t: a, dir }];
-      if (round === 2 || (round === 4 && Math.random() < .5)) list.push({ t: pick(TRAINS.filter(t => t.id !== 'nagai')), dir: -dir, delay: passMs(a, dir) * .7 + 600 });
-      else if (round === 4) list.push({ t: pick(TRAINS), dir: -dir, delay: rand(300, 1000) });
-      crossState = 'wait';
-      if (Math.random() < .7) spawnVehicle(false);
-      const ok = await crossing(list, {
-        onEnter: it => { if (it.t.deco === 'ghost') ghostSound(); },
-        onPass: (it, all) => { if (all.some(o => !o.gone)) say(P.stillComing); },
-      });
-      if (!ok || my !== flow) return;
-      crossState = 'go';
-      say(P.nowGo);
-      ring(el, '#fff59d');
-      bounce(el.firstChild);
-      // しばらく さわらないと、もういちど
-      const nudge = () => setTimeout(() => {
-        if (my !== flow || crossState !== 'go' || crossCtx.el !== el) return;
-        ring(el, '#fff59d'); bounce(el.firstChild); say(P.nowGo); crossCtx.nudge = nudge();
-      }, 8000);
-      crossCtx.nudge = nudge();
-    });
-  }
-  // おともだち（または景色）をさわったとき
-  async function crossTap(onActor) {
-    const c = crossCtx;
-    if (!c || c.my !== flow) return;
-    if (crossState === 'wait' && onActor) {
-      // 鳴っているあいだは、わたらない
-      c.st.missed = true;
-      shake(c.el.firstChild);
-      const r = c.el.getBoundingClientRect();
-      popXY(r.right, r.top + r.height * .3, '✋', r.width * .5);
-      say(P.wait);
-      return;
-    }
-    if (crossState !== 'go') return;
-    crossState = 'walking';
-    clearTimeout(c.nudge);
-    const my = flow;
-    sfx.tap();
-    // みぎ よし！ ひだり よし！
-    const r = c.el.getBoundingClientRect();
-    say(P.checkLR);
-    setTimeout(() => popXY(r.right + r.width * .2, r.top + r.height * .4, '👉', r.width * .45), 150);
-    setTimeout(() => popXY(r.left - r.width * .2, r.top + r.height * .4, '👈', r.width * .45), 1100);
-    anim(c.el.firstChild, [
-      { transform: 'scaleX(1)' }, { transform: 'scaleX(-1)', offset: .15 }, { transform: 'scaleX(-1)', offset: .45 },
-      { transform: 'scaleX(1)', offset: .6 }, { transform: 'scaleX(1)' },
-    ], { duration: 2000, easing: 'ease-in-out' });
-    await wait(2100);
-    if (my !== flow) return;
-    say(P.go);
-    // 道を奥へ あるいていく
-    const steps = 16, y1 = G.horizonY + G.carH * .1, dur = 3400;
-    const frames = [];
-    for (let i = 0; i <= steps; i++) {
-      const y = c.y0 + (y1 - c.y0) * (i / steps);
-      const sc = roadHalf(y) / G.R;
-      const x = G.cx - .2 * roadHalf(y) * .48;
-      frames.push({ transform: `translate(${f1(x)}px,${f1(y - (i % 2 ? G.carH * .06 * sc : 0))}px) scale(${sc.toFixed(3)}) translate(-50%,-100%)` });
-    }
-    const a = c.el.animate(frames, { duration: dur, easing: 'linear', fill: 'forwards' });
-    await new Promise(res => { a.onfinish = res; setTimeout(res, dur + 300); });
-    if (my !== flow) return;
-    sparkle(c.goal);
-    bounce(c.goal);
-    const [big, line] = pick(PRAISE);
-    c.st.streak = c.st.missed ? 0 : c.st.streak + 1;
-    const sub = c.st.streak >= 2 ? `${c.st.streak}れんぞく！` : '';
-    cheer(big, { stamp: pick(STAMPS), sub });
-    const clips = [P.arrived, line];
-    if (sub) clips.push(streakLine(c.st.streak));
-    await say(clips.join('　'), { clips });
-    await wait(400);
-    if (my !== flow) return;
-    $('#actorLayer').innerHTML = '';
-    crossCtx = null;
-    c.resolve();
-  }
-
-  // ---------- ③ なんりょう？（車両をかぞえる） ----------
+  // ---------- ② なんりょう？（車両をかぞえる） ----------
   async function goCount() {
     show('play');
     mode = 'count';
@@ -2117,7 +1941,6 @@
     sfx.tap();
     const m = b.dataset.mode;
     if (m === 'free') goFree();
-    else if (m === 'cross') goCross();
     else if (m === 'count') goCount();
     else goZukan('home');
   }));
@@ -2218,7 +2041,6 @@
     };
     Object.keys(P).forEach(k => add(P[k]));
     TRAINS.forEach(t => add(t.line));
-    FRIENDS.forEach(f => add(wantLine(f)));
     COUNT.forEach(c => add(`${c}！`));
     RYO.forEach(c => add(`${c}！`));
     PRAISE.forEach(p => add(p[1]));

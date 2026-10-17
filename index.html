@@ -62,14 +62,12 @@
   .world > svg.land { position: absolute; top: 0; left: 0; }
   .layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
   #sky { z-index: 0; }
-  #goalLayer { z-index: 1; }
   #backTraffic { z-index: 2; }
   #farTrains { z-index: 3; }
   #wires { z-index: 4; }
   #nearTrains { z-index: 5; }
   #xingLayer { z-index: 6; }
   #frontTraffic { z-index: 7; }
-  #actorLayer { z-index: 8; }
   .cloud { position: absolute; animation: drift 60s linear infinite; opacity: .95; }
   @keyframes drift { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
 
@@ -106,14 +104,10 @@
   .gatebox { position: absolute; background: linear-gradient(#f7f7f7, #d9dadc); border: 2px solid #8d8f94; border-radius: 4px; box-shadow: inset 0 -5px 0 #ffd200; pointer-events: none; }
   .arm.fast { transition: none; }
 
-  .veh, .actor, .goal { position: absolute; left: 0; top: 0; transform-origin: 0 0; line-height: 1; will-change: transform; }
+  .veh { position: absolute; left: 0; top: 0; transform-origin: 0 0; line-height: 1; will-change: transform; }
   .veh { pointer-events: auto; cursor: pointer; }
   .veh svg { display: block; width: 100%; height: 100%; }
-  .veh .inner, .actor .inner { display: block; width: 100%; height: 100%; }
-  .actor { pointer-events: auto; cursor: pointer; text-align: center; }
-  .actor .inner { font-size: 100%; }
-  .actor .shadow { position: absolute; left: 15%; right: 15%; bottom: -6%; height: 14%; border-radius: 50%; background: rgba(0,0,0,.18); z-index: -1; }
-  .goal { text-align: center; }
+  .veh .inner { display: block; width: 100%; height: 100%; }
 
   /* ---------- 画面の切り替え ---------- */
   .screen { position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: none; z-index: 10; pointer-events: none; }
@@ -167,7 +161,6 @@
   .big-btn .icon svg { height: 1em; width: auto; display: block; }
   .big-btn .label { font-size: 2.9vmin; font-size: clamp(11px, 2.9vmin, 22px); font-weight: 900; white-space: nowrap; }
   .big-btn.free { border: 6px solid #ef5a3c; }
-  .big-btn.cross { border: 6px solid #ffc107; }
   .big-btn.count { border: 6px solid #64b5f6; }
   .big-btn.book { border: 6px solid #8d6e63; }
 
@@ -248,7 +241,6 @@
   .cheer-sub { position: relative; margin-top: 1vmin; font-size: 6vmin; font-weight: 900; color: #fff; background: #ef5a3c; border-radius: 999px; padding: .1em .8em; box-shadow: 0 5px 0 rgba(0,0,0,.12); }
   #fx { position: fixed; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; overflow: hidden; z-index: 20; }
   #fx > span { position: absolute; line-height: 1; will-change: transform; }
-  #fx .ring { border-radius: 50%; border: 8px solid var(--c, #fff59d); }
 
   /* ---------- 保護者用 ---------- */
   .parent-btn {
@@ -305,14 +297,12 @@
 <div class="world" id="world">
   <div class="layer" id="sky"></div>
   <svg class="land" id="land" aria-hidden="true"></svg>
-  <div class="layer" id="goalLayer"></div>
   <div class="layer" id="backTraffic"></div>
   <div class="layer" id="farTrains"></div>
   <svg class="layer" id="wires" aria-hidden="true"></svg>
   <div class="layer" id="nearTrains"></div>
   <div class="layer" id="xingLayer"></div>
   <div class="layer" id="frontTraffic"></div>
-  <div class="layer" id="actorLayer"></div>
 </div>
 
 <!-- はじめる -->
@@ -330,13 +320,12 @@
   <h1 class="title">ふみきり <span class="kan">カンカン</span></h1>
   <div class="menu">
     <button class="big-btn free" data-mode="free"><span class="icon" id="xingIcon"></span><span class="label">ふみきり</span></button>
-    <button class="big-btn cross" data-mode="cross"><span class="icon">🐶</span><span class="label">わたれるかな？</span></button>
     <button class="big-btn count" data-mode="count"><span class="icon">🔢</span><span class="label">なんりょう？</span></button>
     <button class="big-btn book" data-mode="zukan"><span class="icon">📖</span><span class="label">でんしゃずかん</span></button>
   </div>
 </section>
 
-<!-- あそぶ画面（ふみきり・わたれるかな？・なんりょう？で共通） -->
+<!-- あそぶ画面（ふみきり・なんりょう？で共通） -->
 <section id="play" class="screen">
   <div class="topbar">
     <button class="round-btn" data-home aria-label="おうちにもどる">🏠</button>
@@ -1398,37 +1387,6 @@ var sparkle = el => {
   var c = center(el);
   burst(c.x, c.y, ['✨', '💫', '⭐'], 8, Math.max(60, c.w * .8));
 };
-// わっか（ぽわん）
-function ring(el, color) {
-  if (!room(2)) return;
-  var c = center(el);
-  var _loop4 = function _loop4() {
-    var s = spawn('', {
-      left: `${c.x}px`,
-      top: `${c.y}px`,
-      width: `${c.w}px`,
-      height: `${c.w}px`,
-      marginLeft: `${-c.w / 2}px`,
-      marginTop: `${-c.w / 2}px`
-    });
-    s.className = 'ring';
-    s.style.setProperty('--c', color || '#fff59d');
-    anim(s, [{
-      transform: 'scale(.5)',
-      opacity: .9
-    }, {
-      transform: 'scale(2.2)',
-      opacity: 0
-    }], {
-      duration: 1100,
-      delay: i * 250,
-      fill: 'backwards'
-    }).onfinish = () => s.remove();
-  };
-  for (var i = 0; i < 2; i++) {
-    _loop4();
-  }
-}
 function fireworks() {
   for (var i = 0; i < 3; i++) {
     setTimeout(() => burst(innerWidth * (.2 + Math.random() * .6), innerHeight * (.15 + Math.random() * .3), ['✨', '🎇', '⭐', '💥'], 10, 110, [20, 36]), i * 500);
@@ -1436,7 +1394,7 @@ function fireworks() {
 }
 function confetti() {
   var items = ['🎉', '⭐', '✨', '🌸', '🎈'];
-  var _loop5 = function _loop5() {
+  var _loop4 = function _loop4() {
     var s = spawn(items[i % items.length], {
       left: '50vw',
       top: '45vh',
@@ -1466,7 +1424,7 @@ function confetti() {
     }).onfinish = () => s.remove();
   };
   for (var i = 0, n = room(24); i < n; i++) {
-    _loop5();
+    _loop4();
   }
 }
 
@@ -2206,7 +2164,7 @@ function crossing(_x2) {
   return _crossing.apply(this, arguments);
 } // 電車が画面を通りすぎるのにかかる時間（ms）
 function _crossing() {
-  _crossing = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2(list, {
+  _crossing = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee(list, {
     onEnter,
     onCar,
     onPass,
@@ -2214,8 +2172,8 @@ function _crossing() {
     speed
   } = {}) {
     var my, dirs;
-    return _regenerator().w(function (_context2) {
-      while (1) switch (_context2.n) {
+    return _regenerator().w(function (_context) {
+      while (1) switch (_context.n) {
         case 0:
           my = flow;
           dirs = () => ({
@@ -2223,16 +2181,16 @@ function _crossing() {
             r: list.some(it => !it.gone && it.dir > 0)
           });
           XING.start(dirs());
-          _context2.n = 1;
+          _context.n = 1;
           return wait(2300);
         case 1:
           if (!(my !== flow)) {
-            _context2.n = 2;
+            _context.n = 2;
             break;
           }
-          return _context2.a(2, false);
+          return _context.a(2, false);
         case 2:
-          _context2.n = 3;
+          _context.n = 3;
           return Promise.all(list.map(it => wait(it.delay || 0).then(() => {
             if (my !== flow) return null;
             it.train = makeTrain(it.t, it.dir, {
@@ -2252,26 +2210,26 @@ function _crossing() {
           })));
         case 3:
           if (!(my !== flow)) {
-            _context2.n = 4;
+            _context.n = 4;
             break;
           }
-          return _context2.a(2, false);
+          return _context.a(2, false);
         case 4:
-          _context2.n = 5;
+          _context.n = 5;
           return wait(500);
         case 5:
           if (!(my !== flow)) {
-            _context2.n = 6;
+            _context.n = 6;
             break;
           }
-          return _context2.a(2, false);
+          return _context.a(2, false);
         case 6:
-          _context2.n = 7;
+          _context.n = 7;
           return XING.open();
         case 7:
-          return _context2.a(2, my === flow);
+          return _context.a(2, my === flow);
       }
-    }, _callee2);
+    }, _callee);
   }));
   return _crossing.apply(this, arguments);
 }
@@ -2417,13 +2375,6 @@ var P = {
   surechigai: 'すれちがった！',
   newTrain: 'あたらしい　でんしゃ！',
   oi: 'おーい！',
-  crossHello: 'ふみきりを　わたってみよう！',
-  wait: 'まって！　カンカン　なってるよ！',
-  nowGo: 'カンカンが　とまったよ。　わたれるかな？',
-  checkLR: 'みぎ　よし！　ひだり　よし！',
-  go: 'しゅっぱーつ！',
-  arrived: 'わたれたね！',
-  crossFinale: 'ぜんぶ　わたれたね！　ふみきりの　めいじん！',
   countHello: 'でんしゃは　なんりょう　かな？　いっしょに　かぞえよう！',
   countAsk: 'なんりょう　だった？',
   thisWay: 'こっちだよー。',
@@ -2432,27 +2383,6 @@ var P = {
   zukanAll: 'ぜんぶの　でんしゃに　あえたね！　すごい！',
   notYet: 'まだ　あって　いない　でんしゃだよ。'
 };
-var FRIENDS = [{
-  e: '🐶',
-  n: 'いぬさん'
-}, {
-  e: '🐱',
-  n: 'ねこさん'
-}, {
-  e: '🐰',
-  n: 'うさぎさん'
-}, {
-  e: '🐻',
-  n: 'くまさん'
-}, {
-  e: '🐼',
-  n: 'ぱんださん'
-}, {
-  e: '🐷',
-  n: 'ぶたさん'
-}];
-var wantLine = f => `${f.n}が　むこうに　いきたいって。`;
-var GOALS = ['🏠', '🛝', '🍦', '🏫', '🎪', '🍰'];
 var COUNT = ['いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち'];
 var RYO = ['いちりょう', 'にりょう', 'さんりょう', 'よんりょう', 'ごりょう', 'ろくりょう', 'ななりょう', 'はちりょう'];
 var streakLine = n => `${n}かい、れんぞく！`;
@@ -2473,8 +2403,6 @@ function show(id) {
   clearTimeout(cheerTimer);
   $('#cheer').hidden = true;
   XING.reset();
-  $('#actorLayer').innerHTML = '';
-  $('#goalLayer').innerHTML = '';
   $('#choices').hidden = true;
   $('#choices').innerHTML = '';
   clearTimeout(idleTimer);
@@ -2565,22 +2493,22 @@ function pickTrain() {
   return TRAINS[0];
 }
 function worldTap() {
-  if (mode === 'free') freeRun();else if (mode === 'cross') crossTap(false);
+  if (mode === 'free') freeRun();
 }
 function freeRun() {
   return _freeRun.apply(this, arguments);
-} // ---------- ② わたれるかな？（踏切が あいてから わたる） ----------
+} // ---------- ② なんりょう？（車両をかぞえる） ----------
 function _freeRun() {
-  _freeRun = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+  _freeRun = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
     var my, a, dir, list, r, fresh, crossed, ok, pill;
-    return _regenerator().w(function (_context3) {
-      while (1) switch (_context3.n) {
+    return _regenerator().w(function (_context2) {
+      while (1) switch (_context2.n) {
         case 0:
           if (!busy) {
-            _context3.n = 1;
+            _context2.n = 1;
             break;
           }
-          return _context3.a(2);
+          return _context2.a(2);
         case 1:
           busy = true;
           idleCount = 0;
@@ -2612,7 +2540,7 @@ function _freeRun() {
           say(list.length > 1 && list[1].cross ? P.comingBoth : P.coming);
           fresh = [];
           crossed = false;
-          _context3.n = 2;
+          _context2.n = 2;
           return crossing(list, {
             onEnter: it => {
               if (it.t.deco === 'ghost') ghostSound();else if (Math.random() < .35) trainHorn();
@@ -2634,15 +2562,15 @@ function _freeRun() {
             }
           });
         case 2:
-          ok = _context3.v;
+          ok = _context2.v;
           if (!(!ok || my !== flow)) {
-            _context3.n = 3;
+            _context2.n = 3;
             break;
           }
-          return _context3.a(2);
+          return _context2.a(2);
         case 3:
           if (!fresh.length) {
-            _context3.n = 6;
+            _context2.n = 6;
             break;
           }
           pill = $('#seenPill');
@@ -2653,382 +2581,48 @@ function _freeRun() {
           sfx.yay();
           sparkle(pill);
           fall(['⭐', '✨', '🚃'], 14);
-          _context3.n = 4;
+          _context2.n = 4;
           return say(P.newTrain);
         case 4:
           if (!(seen.size === TRAINS.length && fresh.length)) {
-            _context3.n = 5;
+            _context2.n = 5;
             break;
           }
           cheer('ぜんぶ あえた！', {
             stamp: '🏆',
             big: true
           });
-          _context3.n = 5;
+          _context2.n = 5;
           return say(P.zukanAll);
         case 5:
-          _context3.n = 7;
+          _context2.n = 7;
           break;
         case 6:
           if (Math.random() < .5) say(P.opened);
         case 7:
           if (!(my !== flow)) {
-            _context3.n = 8;
+            _context2.n = 8;
             break;
           }
-          return _context3.a(2);
+          return _context2.a(2);
         case 8:
           busy = false;
           armIdle();
         case 9:
-          return _context3.a(2);
+          return _context2.a(2);
       }
-    }, _callee3);
+    }, _callee2);
   }));
   return _freeRun.apply(this, arguments);
-}
-var crossState = '',
-  crossCtx = null;
-function goCross() {
-  return _goCross.apply(this, arguments);
-}
-function _goCross() {
-  _goCross = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
-    var my, st, friends, round;
-    return _regenerator().w(function (_context4) {
-      while (1) switch (_context4.n) {
-        case 0:
-          show('play');
-          mode = 'cross';
-          setTop({
-            progress: true,
-            ask: true
-          });
-          renderProgress(0);
-          my = flow;
-          st = {
-            streak: 0
-          };
-          friends = shuffle(FRIENDS);
-          _context4.n = 1;
-          return say(P.crossHello);
-        case 1:
-          round = 0;
-        case 2:
-          if (!(round < ROUNDS)) {
-            _context4.n = 7;
-            break;
-          }
-          if (!(my !== flow)) {
-            _context4.n = 3;
-            break;
-          }
-          return _context4.a(2);
-        case 3:
-          _context4.n = 4;
-          return crossRound(friends[round % friends.length], round, st);
-        case 4:
-          if (!(my !== flow)) {
-            _context4.n = 5;
-            break;
-          }
-          return _context4.a(2);
-        case 5:
-          renderProgress(round + 1);
-          _context4.n = 6;
-          return wait(600);
-        case 6:
-          round++;
-          _context4.n = 2;
-          break;
-        case 7:
-          if (!(my !== flow)) {
-            _context4.n = 8;
-            break;
-          }
-          return _context4.a(2);
-        case 8:
-          cheer('めいじん！', {
-            stamp: '🏆',
-            big: true
-          });
-          _context4.n = 9;
-          return say(P.crossFinale);
-        case 9:
-          _context4.n = 10;
-          return wait(2500);
-        case 10:
-          if (my === flow) goHome();
-        case 11:
-          return _context4.a(2);
-      }
-    }, _callee4);
-  }));
-  return _goCross.apply(this, arguments);
-}
-function crossRound(friend, round, st) {
-  var my = flow;
-  return new Promise(/*#__PURE__*/function () {
-    var _ref2 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee(resolve) {
-      var goal, gs, el, as, y0, a, dir, list, ok, nudge;
-      return _regenerator().w(function (_context) {
-        while (1) switch (_context.n) {
-          case 0:
-            st.missed = false;
-            // むこうがわの 行きたいところ
-            goal = document.createElement('div');
-            goal.className = 'goal';
-            goal.textContent = pick(GOALS);
-            gs = G.R * .75;
-            goal.style.cssText = `width:${f1(gs)}px;height:${f1(gs)}px;font-size:${f1(gs * .9)}px`;
-            $('#goalLayer').innerHTML = '';
-            $('#goalLayer').appendChild(goal);
-            placeOnRoad(goal, G.horizonY + G.carH * .06, -.2);
-            // わたりたい おともだち
-            el = document.createElement('div');
-            el.className = 'actor';
-            el.setAttribute('role', 'button');
-            el.setAttribute('aria-label', friend.n);
-            as = G.R * .6;
-            el.style.cssText = `width:${f1(as)}px;height:${f1(as)}px;font-size:${f1(as * .86)}px`;
-            el.innerHTML = `<span class="inner">${friend.e}</span><span class="shadow"></span>`;
-            $('#actorLayer').innerHTML = '';
-            $('#actorLayer').appendChild(el);
-            y0 = Math.min(G.H - 12, G.stopNear + G.carH * .55);
-            placeOnRoad(el, y0, -.2);
-            anim(el.firstChild, [{
-              transform: 'translateY(60%) scale(.3)',
-              opacity: 0
-            }, {
-              transform: 'translateY(-15%) scale(1.1)',
-              opacity: 1,
-              offset: .6
-            }, {
-              transform: 'translateY(0) scale(1)',
-              opacity: 1
-            }], {
-              duration: 700
-            });
-            crossCtx = {
-              el,
-              goal,
-              friend,
-              y0,
-              resolve,
-              st,
-              my
-            };
-            onPress(el, () => crossTap(true));
-            crossState = 'intro';
-            askAgain = () => say(crossState === 'go' ? P.nowGo : crossState === 'wait' ? P.wait : wantLine(friend));
-            _context.n = 1;
-            return say(wantLine(friend));
-          case 1:
-            if (!(my !== flow)) {
-              _context.n = 2;
-              break;
-            }
-            return _context.a(2);
-          case 2:
-            // 電車の来かた：1本、または2本（あとから もう1本 来る）
-            a = pick(TRAINS.filter(t => t.id !== 'nagai')), dir = Math.random() < .5 ? 1 : -1;
-            list = [{
-              t: a,
-              dir
-            }];
-            if (round === 2 || round === 4 && Math.random() < .5) list.push({
-              t: pick(TRAINS.filter(t => t.id !== 'nagai')),
-              dir: -dir,
-              delay: passMs(a, dir) * .7 + 600
-            });else if (round === 4) list.push({
-              t: pick(TRAINS),
-              dir: -dir,
-              delay: rand(300, 1000)
-            });
-            crossState = 'wait';
-            if (Math.random() < .7) spawnVehicle(false);
-            _context.n = 3;
-            return crossing(list, {
-              onEnter: it => {
-                if (it.t.deco === 'ghost') ghostSound();
-              },
-              onPass: (it, all) => {
-                if (all.some(o => !o.gone)) say(P.stillComing);
-              }
-            });
-          case 3:
-            ok = _context.v;
-            if (!(!ok || my !== flow)) {
-              _context.n = 4;
-              break;
-            }
-            return _context.a(2);
-          case 4:
-            crossState = 'go';
-            say(P.nowGo);
-            ring(el, '#fff59d');
-            bounce(el.firstChild);
-            // しばらく さわらないと、もういちど
-            nudge = () => setTimeout(() => {
-              if (my !== flow || crossState !== 'go' || crossCtx.el !== el) return;
-              ring(el, '#fff59d');
-              bounce(el.firstChild);
-              say(P.nowGo);
-              crossCtx.nudge = nudge();
-            }, 8000);
-            crossCtx.nudge = nudge();
-          case 5:
-            return _context.a(2);
-        }
-      }, _callee);
-    }));
-    return function (_x3) {
-      return _ref2.apply(this, arguments);
-    };
-  }());
-}
-// おともだち（または景色）をさわったとき
-function crossTap(_x4) {
-  return _crossTap.apply(this, arguments);
-} // ---------- ③ なんりょう？（車両をかぞえる） ----------
-function _crossTap() {
-  _crossTap = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5(onActor) {
-    var c, _r2, my, r, steps, y1, dur, frames, i, y, sc, x, a, _pick, _pick2, big, line, sub, clips;
-    return _regenerator().w(function (_context5) {
-      while (1) switch (_context5.n) {
-        case 0:
-          c = crossCtx;
-          if (!(!c || c.my !== flow)) {
-            _context5.n = 1;
-            break;
-          }
-          return _context5.a(2);
-        case 1:
-          if (!(crossState === 'wait' && onActor)) {
-            _context5.n = 2;
-            break;
-          }
-          // 鳴っているあいだは、わたらない
-          c.st.missed = true;
-          shake(c.el.firstChild);
-          _r2 = c.el.getBoundingClientRect();
-          popXY(_r2.right, _r2.top + _r2.height * .3, '✋', _r2.width * .5);
-          say(P.wait);
-          return _context5.a(2);
-        case 2:
-          if (!(crossState !== 'go')) {
-            _context5.n = 3;
-            break;
-          }
-          return _context5.a(2);
-        case 3:
-          crossState = 'walking';
-          clearTimeout(c.nudge);
-          my = flow;
-          sfx.tap();
-          // みぎ よし！ ひだり よし！
-          r = c.el.getBoundingClientRect();
-          say(P.checkLR);
-          setTimeout(() => popXY(r.right + r.width * .2, r.top + r.height * .4, '👉', r.width * .45), 150);
-          setTimeout(() => popXY(r.left - r.width * .2, r.top + r.height * .4, '👈', r.width * .45), 1100);
-          anim(c.el.firstChild, [{
-            transform: 'scaleX(1)'
-          }, {
-            transform: 'scaleX(-1)',
-            offset: .15
-          }, {
-            transform: 'scaleX(-1)',
-            offset: .45
-          }, {
-            transform: 'scaleX(1)',
-            offset: .6
-          }, {
-            transform: 'scaleX(1)'
-          }], {
-            duration: 2000,
-            easing: 'ease-in-out'
-          });
-          _context5.n = 4;
-          return wait(2100);
-        case 4:
-          if (!(my !== flow)) {
-            _context5.n = 5;
-            break;
-          }
-          return _context5.a(2);
-        case 5:
-          say(P.go);
-          // 道を奥へ あるいていく
-          steps = 16, y1 = G.horizonY + G.carH * .1, dur = 3400;
-          frames = [];
-          for (i = 0; i <= steps; i++) {
-            y = c.y0 + (y1 - c.y0) * (i / steps);
-            sc = roadHalf(y) / G.R;
-            x = G.cx - .2 * roadHalf(y) * .48;
-            frames.push({
-              transform: `translate(${f1(x)}px,${f1(y - (i % 2 ? G.carH * .06 * sc : 0))}px) scale(${sc.toFixed(3)}) translate(-50%,-100%)`
-            });
-          }
-          a = c.el.animate(frames, {
-            duration: dur,
-            easing: 'linear',
-            fill: 'forwards'
-          });
-          _context5.n = 6;
-          return new Promise(res => {
-            a.onfinish = res;
-            setTimeout(res, dur + 300);
-          });
-        case 6:
-          if (!(my !== flow)) {
-            _context5.n = 7;
-            break;
-          }
-          return _context5.a(2);
-        case 7:
-          sparkle(c.goal);
-          bounce(c.goal);
-          _pick = pick(PRAISE), _pick2 = _slicedToArray(_pick, 2), big = _pick2[0], line = _pick2[1];
-          c.st.streak = c.st.missed ? 0 : c.st.streak + 1;
-          sub = c.st.streak >= 2 ? `${c.st.streak}れんぞく！` : '';
-          cheer(big, {
-            stamp: pick(STAMPS),
-            sub
-          });
-          clips = [P.arrived, line];
-          if (sub) clips.push(streakLine(c.st.streak));
-          _context5.n = 8;
-          return say(clips.join('　'), {
-            clips
-          });
-        case 8:
-          _context5.n = 9;
-          return wait(400);
-        case 9:
-          if (!(my !== flow)) {
-            _context5.n = 10;
-            break;
-          }
-          return _context5.a(2);
-        case 10:
-          $('#actorLayer').innerHTML = '';
-          crossCtx = null;
-          c.resolve();
-        case 11:
-          return _context5.a(2);
-      }
-    }, _callee5);
-  }));
-  return _crossTap.apply(this, arguments);
 }
 function goCount() {
   return _goCount.apply(this, arguments);
 }
 function _goCount() {
-  _goCount = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
+  _goCount = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
     var my, st, PLAN, round, _PLAN$round, lo, hi, n;
-    return _regenerator().w(function (_context6) {
-      while (1) switch (_context6.n) {
+    return _regenerator().w(function (_context3) {
+      while (1) switch (_context3.n) {
         case 0:
           show('play');
           mode = 'count';
@@ -3042,72 +2636,72 @@ function _goCount() {
             streak: 0
           };
           PLAN = [[2, 3], [3, 4], [2, 5], [3, 6], [4, 6]];
-          _context6.n = 1;
+          _context3.n = 1;
           return say(P.countHello);
         case 1:
           round = 0;
         case 2:
           if (!(round < ROUNDS)) {
-            _context6.n = 7;
+            _context3.n = 7;
             break;
           }
           if (!(my !== flow)) {
-            _context6.n = 3;
+            _context3.n = 3;
             break;
           }
-          return _context6.a(2);
+          return _context3.a(2);
         case 3:
           _PLAN$round = _slicedToArray(PLAN[round], 2), lo = _PLAN$round[0], hi = _PLAN$round[1];
           n = lo + Math.floor(Math.random() * (hi - lo + 1));
-          _context6.n = 4;
+          _context3.n = 4;
           return countRound(n, st);
         case 4:
           if (!(my !== flow)) {
-            _context6.n = 5;
+            _context3.n = 5;
             break;
           }
-          return _context6.a(2);
+          return _context3.a(2);
         case 5:
           renderProgress(round + 1);
-          _context6.n = 6;
+          _context3.n = 6;
           return wait(600);
         case 6:
           round++;
-          _context6.n = 2;
+          _context3.n = 2;
           break;
         case 7:
           if (!(my !== flow)) {
-            _context6.n = 8;
+            _context3.n = 8;
             break;
           }
-          return _context6.a(2);
+          return _context3.a(2);
         case 8:
           cheer('めいじん！', {
             stamp: '🏆',
             big: true
           });
-          _context6.n = 9;
+          _context3.n = 9;
           return say(P.countFinale);
         case 9:
-          _context6.n = 10;
+          _context3.n = 10;
           return wait(2500);
         case 10:
           if (my === flow) goHome();
         case 11:
-          return _context6.a(2);
+          return _context3.a(2);
       }
-    }, _callee6);
+    }, _callee3);
   }));
   return _goCount.apply(this, arguments);
 }
-function countRound(_x5, _x6) {
+function countRound(_x3, _x4) {
   return _countRound.apply(this, arguments);
 } // ---------- でんしゃずかん ----------
 function _countRound() {
-  _countRound = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8(n, st) {
+  _countRound = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5(n, st) {
     var my, t, dir, badgeSize, ok, opts, c, box;
-    return _regenerator().w(function (_context8) {
-      while (1) switch (_context8.n) {
+    return _regenerator().w(function (_context5) {
+      while (1) switch (_context5.n) {
         case 0:
           my = flow;
           st.missed = false;
@@ -3115,7 +2709,7 @@ function _countRound() {
           t = pick(TRAINS.filter(x => x.id !== 'nagai'));
           dir = Math.random() < .5 ? 1 : -1;
           badgeSize = (dir < 0 ? G.carH : G.carH * G.farScale) * .26;
-          _context8.n = 1;
+          _context5.n = 1;
           return crossing([{
             t,
             dir
@@ -3147,12 +2741,12 @@ function _countRound() {
             }
           });
         case 1:
-          ok = _context8.v;
+          ok = _context5.v;
           if (!(!ok || my !== flow)) {
-            _context8.n = 2;
+            _context5.n = 2;
             break;
           }
-          return _context8.a(2);
+          return _context5.a(2);
         case 2:
           // こたえを えらぶ
           opts = [n];
@@ -3166,7 +2760,7 @@ function _countRound() {
           box.style.top = `${f1(G.gateY + G.carH * .12)}px`;
           box.style.bottom = '16px';
           box.hidden = false;
-          _context8.n = 3;
+          _context5.n = 3;
           return new Promise(resolve => {
             opts.forEach((v, k) => {
               var b = document.createElement('button');
@@ -3184,19 +2778,19 @@ function _countRound() {
                 delay: k * 120,
                 fill: 'backwards'
               });
-              b.addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
-                var right, _pick3, _pick4, big, line, sub, clips;
-                return _regenerator().w(function (_context7) {
-                  while (1) switch (_context7.n) {
+              b.addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
+                var right, _pick, _pick2, big, line, sub, clips;
+                return _regenerator().w(function (_context4) {
+                  while (1) switch (_context4.n) {
                     case 0:
                       if (!(my !== flow || box.dataset.done)) {
-                        _context7.n = 1;
+                        _context4.n = 1;
                         break;
                       }
-                      return _context7.a(2);
+                      return _context4.a(2);
                     case 1:
                       if (!(v !== n)) {
-                        _context7.n = 2;
+                        _context4.n = 2;
                         break;
                       }
                       // まちがえても だいじょうぶ。正しいこたえが光って教えてくれる
@@ -3206,13 +2800,13 @@ function _countRound() {
                       right = [...box.children].find(x => x.getAttribute('aria-label') === RYO[n - 1]);
                       right.classList.add('glow');
                       say(P.thisWay);
-                      return _context7.a(2);
+                      return _context4.a(2);
                     case 2:
                       box.dataset.done = '1';
                       b.classList.remove('glow');
                       sfx.pop();
                       sparkle(b);
-                      _pick3 = pick(PRAISE), _pick4 = _slicedToArray(_pick3, 2), big = _pick4[0], line = _pick4[1];
+                      _pick = pick(PRAISE), _pick2 = _slicedToArray(_pick, 2), big = _pick2[0], line = _pick2[1];
                       st.streak = st.missed ? 0 : st.streak + 1;
                       sub = st.streak >= 2 ? `${st.streak}れんぞく！` : '';
                       cheer(`${v}りょう！`, {
@@ -3221,16 +2815,16 @@ function _countRound() {
                       });
                       clips = [`${RYO[n - 1]}！`, line];
                       if (sub) clips.push(streakLine(st.streak));
-                      _context7.n = 3;
+                      _context4.n = 3;
                       return say(clips.join('　'), {
                         clips
                       });
                     case 3:
                       resolve();
                     case 4:
-                      return _context7.a(2);
+                      return _context4.a(2);
                   }
-                }, _callee7);
+                }, _callee4);
               })));
               box.appendChild(b);
             });
@@ -3242,9 +2836,9 @@ function _countRound() {
           box.innerHTML = '';
           delete box.dataset.done;
         case 4:
-          return _context8.a(2);
+          return _context5.a(2);
       }
-    }, _callee8);
+    }, _callee5);
   }));
   return _countRound.apply(this, arguments);
 }
@@ -3334,7 +2928,7 @@ document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click'
   unlockAudio();
   sfx.tap();
   var m = b.dataset.mode;
-  if (m === 'free') goFree();else if (m === 'cross') goCross();else if (m === 'count') goCount();else goZukan('home');
+  if (m === 'free') goFree();else if (m === 'count') goCount();else goZukan('home');
 }));
 
 // 保護者メニュー：1.5秒の長押しで開く（子どもが偶然開かないように）
@@ -3471,7 +3065,6 @@ window.voiceLines = function () {
   };
   Object.keys(P).forEach(k => add(P[k]));
   TRAINS.forEach(t => add(t.line));
-  FRIENDS.forEach(f => add(wantLine(f)));
   COUNT.forEach(c => add(`${c}！`));
   RYO.forEach(c => add(`${c}！`));
   PRAISE.forEach(p => add(p[1]));
