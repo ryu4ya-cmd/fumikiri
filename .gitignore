@@ -1,2 +1,4 @@
 node_modules/
 .venv-voice/
+voice-candidates/
+__pycache__/

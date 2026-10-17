@@ -23,7 +23,9 @@ iPhone・iPad の Safari で開いて「共有 → ホーム画面に追加」�
 このモデルは、[あみたろの声素材工房](https://amitaro.net/) の声をもとにしたものです（モデルの作者：litagin さん。[利用規約](https://huggingface.co/litagin/sbv2_koharune_ami)）。
 声のファイルがない場所（claude.ai の公開ページなど）では、端末の読み上げ機能を使います。
 
-踏切の音・電車の音・BGM は、ファイルを使わずに、その場で作って鳴らしています。
+声は、1つのセリフにつき何とおりか作り、音声認識（faster-whisper）で聞きとって、セリフどおりに いちばん はっきり聞こえたものを選んでいます（`tools/make_voice.py --pick 6`）。数や「〜両」のように聞きとりにくいことばは、漢字まじりの文で読ませています。
+
+効果音（踏切の「カーン」、警笛、線路のつなぎめの「ガタン」、ブレーキの「ぷしゅー」「キーッ」、ドアとチャイム、発車ベル、車掌さんの笛、くるまのクラクション、遮断機）は、`tools/make_sounds.py` で数式から作った音のファイル（`sounds/`）です。走っている間の「ごー」とモーターの「ういーん」、BGM は、ブラウザの中で その場で作っています（速さに合わせて音の高さや大きさが変わります）。
 
 ## 保護者の方へ
 
@@ -45,6 +47,7 @@ iPhone・iPad の Safari で開いて「共有 → ホーム画面に追加」�
   はじめの1回だけ `npm install`、そのあとは直すたびに `npm run build`。
 - `index.html`：公開用のページ（自動で作られるので、直接は編集しません）。
 - `icons/`、`manifest.webmanifest`：ホーム画面に追加したときのアイコンと設定。アイコンの元の絵は `icons/icon.svg`、png は `tools/make_icons.js`（Playwright を使います）で作ります。
+- `sounds/`：効果音（`tools/make_sounds.py` で作る）。
 - `voice/`：ゲームの声（mp3 と、セリフの部品 → ファイル名の表 `index.json`）。セリフを足したら `tools/make_voice.py` で足りない分を作ります（作り方はスクリプトの先頭に書いてあります）。
 - `tools/voice_lines.js`：ゲームで使う声の部品をぜんぶ出します（`tools/make_voice.py` が使います）。
 - `fonts/`：古い端末向けの絵文字フォント（Noto Color Emoji から使う絵文字だけを抜き出したもの。ライセンスは `fonts/OFL.txt`）。絵文字を足したら `tools/make_emoji_font.py` で作り直します。

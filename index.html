@@ -77,7 +77,14 @@
 
   .train { position: absolute; left: 0; top: 0; white-space: nowrap; pointer-events: auto; will-change: transform; cursor: pointer; }
   .carbox { position: relative; display: inline-block; vertical-align: top; }
-  .carbox svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  /* 車体（ばねで ゆれる）・台車・車輪（回る） */
+  .carbox .body { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1; transform-origin: 50% 90%; }
+  .carbox .body img { display: block; width: 100%; height: 100%; }
+  .train.moving .body { animation-name: sway; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+  @keyframes sway { 0%, 100% { transform: translateY(0) rotate(0deg); } 30% { transform: translateY(-1.1%) rotate(.12deg); } 65% { transform: translateY(.5%) rotate(-.1deg); } }
+  .wheel { position: absolute; z-index: 2; background-size: 100% 100%; transform: rotate(var(--rot, 0deg)); }
+  .bogie { position: absolute; z-index: 3; background-size: 100% 100%; }
+  .winemo { position: absolute; transform: translate(-50%,-50%); line-height: 1; pointer-events: none; }
   .train.ghost .carbox { animation: ghostFloat 1.4s ease-in-out infinite; }
   .train.ghost { opacity: .86; }
   @keyframes ghostFloat { 50% { transform: translateY(-9%); } }
@@ -86,20 +93,20 @@
     position: absolute; left: 50%; top: 22%; width: 1.5em; height: 1.5em; margin-left: -.75em;
     border-radius: 50%; background: #fff; color: var(--accent);
     font-weight: 900; line-height: 1.5em; text-align: center;
-    box-shadow: 0 4px 0 rgba(0,0,0,.18); border: 3px solid #ffd200;
+    box-shadow: 0 4px 0 rgba(0,0,0,.18); border: 3px solid #ffd200; z-index: 4;
   }
 
   .xing { position: absolute; pointer-events: auto; transform-origin: 50% 100%; cursor: pointer; }
   .xing svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  .lamp { fill: #4d1510; }
-  .halo { fill: #ff5a36; opacity: 0; }
+  .lamp { fill: #4d1510; transition: fill .09s; }
+  .halo { fill: #ff5a36; opacity: 0; transition: opacity .12s; }
   .xa .lampA, .xb .lampB { fill: #ff3418; }
   .xa .haloA, .xb .haloB { opacity: .5; }
   .arr { fill: #3a3a3a; }
   .toL .arrL, .toR .arrR { fill: #ffd400; }
   .xing.hint { animation: hint 1.1s ease-in-out 3; }
   @keyframes hint { 50% { transform: scale(1.1); } }
-  .arm { position: absolute; transition: transform 1.9s ease-in-out; pointer-events: none; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+  .arm { position: absolute; transition: transform 2.2s cubic-bezier(.45,.05,.35,1); pointer-events: none; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
   .arm.l { transform-origin: 0 50%; }
   .arm.r { transform-origin: 100% 50%; }
   .arm.l.up { transform: rotate(-86deg); }
@@ -111,7 +118,11 @@
   .veh { position: absolute; left: 0; top: 0; transform-origin: 0 0; line-height: 1; will-change: transform; }
   .veh { pointer-events: auto; cursor: pointer; }
   .veh svg { display: block; width: 100%; height: 100%; }
-  .veh .inner { display: block; width: 100%; height: 100%; }
+  .veh .inner { display: block; width: 100%; height: 100%; transform-origin: 50% 100%; }
+  .veh.go .inner { animation: bob .42s ease-in-out infinite alternate; }
+  @keyframes bob { to { transform: translateY(-2.5%) scale(1.01, .99); } }
+  .veh .tlg { opacity: 0; transition: opacity .25s; }
+  .veh.brake .tlg { opacity: .55; }
 
   /* ---------- 画面の切り替え ---------- */
   .screen { position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: none; z-index: 10; pointer-events: none; }
@@ -171,7 +182,8 @@
   /* ---------- 駅 ---------- */
   /* ひらく扉（2まいの扉が、左右の かべの中へ）。うしろは車内の色 */
   .door { position: absolute; overflow: hidden; background: linear-gradient(#f3ead4, #cdbf9f); }
-  .door i { position: absolute; top: 0; bottom: 0; width: 50%; background: var(--dc, #5e161c); box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); transition: transform .7s ease-in-out; }
+  .door i { position: absolute; top: 0; bottom: 0; width: 50%; background: var(--dc, #5e161c); box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); transition: transform .75s cubic-bezier(.55,0,.35,1); }
+  .open .door i { transition: transform .85s cubic-bezier(.3,0,.15,1) .3s; }
   .door i:first-child { left: 0; }
   .door i + i { right: 0; }
   .door i::after { content: ""; position: absolute; left: 16%; right: 16%; top: 7%; height: 44%; background: linear-gradient(#d6e6f1, #8fa8bb); border: 2px solid #d3d8de; border-radius: 2px; }
@@ -179,7 +191,9 @@
   .open .door i + i { transform: translateX(100%); }
   .door.hint { animation: doorHint 1s ease-in-out infinite; }
   @keyframes doorHint { 50% { box-shadow: 0 0 0 4px #fff59d, 0 0 18px 8px #ffe082; } }
-  .pax { position: absolute; line-height: 1; transform: translate(-50%,-100%); pointer-events: auto; cursor: pointer; will-change: transform; }
+  .pax { position: absolute; line-height: 1; transform: translate(-50%,-100%); transform-origin: 50% 100%; pointer-events: auto; cursor: pointer; will-change: transform; }
+  .pax.idle { animation: paxIdle 1.7s ease-in-out infinite; }
+  @keyframes paxIdle { 0%, 100% { transform: translate(-50%,-100%) scale(1,1) rotate(0deg); } 25% { transform: translate(-50%,-100%) scale(1.03,.97) rotate(-3deg); } 50% { transform: translate(-50%,-103%) scale(.98,1.03) rotate(0deg); } 75% { transform: translate(-50%,-100%) scale(1.03,.97) rotate(3deg); } }
   .pax.off { pointer-events: none; }
   /* 駅名標（となりの駅も書いてある） */
   .ekimei { display: flex; flex-direction: column; align-items: center; min-width: 0; background: #fff; border-radius: 10px; padding: 4px 18px 0; box-shadow: 0 4px 0 rgba(0,0,0,.12); border-bottom: 8px solid var(--maroon); }
@@ -247,7 +261,7 @@
   .zukan-grid { position: absolute; top: 96px; left: 0; right: 0; bottom: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 18px; padding: 8px 16px 90px; }
   .zcard { width: 300px; max-width: 100%; border-radius: 24px; background: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.1), 0 10px 20px rgba(0,0,0,.08); padding: 14px 10px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .zcard .mini { white-space: nowrap; height: 64px; }
-  .zcard .mini .carbox { width: 137px; height: 64px; }
+
   .zcard .mini .carbox + .carbox { margin-left: 2px; }
   .zcard .name { font-weight: 900; font-size: 20px; }
   .zcard.locked .mini { filter: brightness(0) opacity(.18); -webkit-filter: brightness(0) opacity(.18); }
@@ -322,9 +336,6 @@
 <!-- 電車の部品（グラデーションと、車体の形での切りぬき） -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs id="defs">
-    <linearGradient id="gMaroon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#84262d"/><stop offset=".5" stop-color="#6b1a20"/><stop offset="1" stop-color="#52121a"/></linearGradient>
-    <linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6e6f1"/><stop offset="1" stop-color="#8fa8bb"/></linearGradient>
-    <linearGradient id="gGhostGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3edff"/><stop offset="1" stop-color="#c3b0ff"/></linearGradient>
     <linearGradient id="gGrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e69a"/><stop offset="1" stop-color="#78c866"/></linearGradient>
     <linearGradient id="gPlat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9d4ca"/><stop offset="1" stop-color="#bdb6aa"/></linearGradient>
     <linearGradient id="gRoad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a3a5aa"/><stop offset="1" stop-color="#85878d"/></linearGradient>
@@ -501,7 +512,7 @@ function _toArray(r) { return _arrayWithHoles(r) || _iterableToArray(r) || _unsu
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
+function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n3 = 0, F = function F() {}; return { s: F, n: function n() { return _n3 >= r.length ? { done: !0 } : { done: !1, value: r[_n3++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 // ---------- 小さな道具 ----------
@@ -649,6 +660,7 @@ function unlockAudio() {
       sfxOut.gain.value = sfxVolume;
       sfxOut.connect(ac.destination);
     }
+    loadSounds();
   } catch (err) {}
 }
 
@@ -1006,7 +1018,53 @@ function say(text, {
   });
 }
 
-// ---------- 効果音（ファイルを使わずに作る） ----------
+// ---------- 効果音のファイル（sounds/。tools/make_sounds.py で作る） ----------
+// 読みこめないとき（ファイルがない場所など）は、下の「その場で作る音」を使う
+var SND = {
+  buf: {},
+  loading: false
+};
+var SND_NAMES = ['bell', 'horn', 'joint', 'air', 'squeal', 'door_open', 'door_close', 'chime', 'depart', 'whistle', 'carhorn', 'gate'];
+function loadSounds() {
+  if (SND.loading || !ac) return;
+  SND.loading = true;
+  SND_NAMES.forEach(n => {
+    try {
+      fetch(`sounds/${n}.mp3`).then(r => {
+        if (!r.ok) throw new Error('sound');
+        return r.arrayBuffer();
+      }).then(b => new Promise((res, rej) => ac.decodeAudioData(b, res, rej))).then(b => {
+        SND.buf[n] = b;
+      }).catch(() => {});
+    } catch (err) {}
+  });
+}
+// ファイルの音を鳴らす。鳴らせたら true。dur をわたすと、その長さで すっと消す
+function play(name, {
+  vol = 1,
+  rate = 1,
+  at = 0,
+  dur = 0
+} = {}) {
+  var b = SND.buf[name];
+  if (!ac || !b) return false;
+  var src = ac.createBufferSource(),
+    g = ac.createGain();
+  src.buffer = b;
+  src.playbackRate.value = rate;
+  g.gain.value = vol;
+  src.connect(g).connect(sfxOut);
+  var t = ac.currentTime + .01 + at;
+  src.start(t);
+  if (dur) {
+    g.gain.setValueAtTime(vol, t + dur);
+    g.gain.linearRampToValueAtTime(0, t + dur + .15);
+    src.stop(t + dur + .2);
+  }
+  return true;
+}
+
+// ---------- 効果音（その場で作る音） ----------
 // t 秒に、f Hz の音を dur 秒だけ鳴らす
 function ding(t, f, dur, {
   type = 'triangle',
@@ -1088,7 +1146,9 @@ function hiss(t, dur, freq, vol, q = .8) {
 }
 // 踏切の「カン」（電子音の警報機。高さのちがう音を重ねて、すっと消す）
 function bellStrike() {
-  if (!ac) return;
+  if (!ac || play('bell', {
+    vol: .5
+  })) return;
   var t = ac.currentTime + .01;
   ding(t, 740, .42, {
     type: 'square',
@@ -1105,7 +1165,9 @@ function bellStrike() {
 }
 // 遮断機が動く「ういーん」
 var gateMotor = () => {
-  if (ac) glide(ac.currentTime + .01, [[0, 120], [1.8, 150]], {
+  if (ac && !play('gate', {
+    vol: .35
+  })) glide(ac.currentTime + .01, [[0, 120], [1.8, 150]], {
     type: 'sawtooth',
     vol: .012,
     filter: 420
@@ -1113,7 +1175,10 @@ var gateMotor = () => {
 };
 // 電車の警笛「ファーン」
 function trainHorn(len = .9) {
-  if (!ac) return;
+  if (!ac || play('horn', {
+    vol: .5,
+    dur: Math.min(1, len)
+  })) return;
   var t = ac.currentTime + .01;
   [330, 415].forEach(f => glide(t, [[0, f * 1.03], [.07, f], [len, f * .985]], {
     type: 'sawtooth',
@@ -1123,7 +1188,10 @@ function trainHorn(len = .9) {
 }
 // 線路のつなぎ目の「ガタン」（車輪がひとつ通るごとに鳴らす）
 function clack(vol) {
-  if (!ac) return;
+  if (!ac || play('joint', {
+    vol: .55 * vol,
+    rate: rand(.93, 1.07)
+  })) return;
   var t = ac.currentTime + .005;
   hiss(t, .06, 850, .16 * vol, 1.4);
   ding(t, 72, .13, {
@@ -1144,13 +1212,81 @@ function setRumble(level) {
     src.buffer = noise();
     src.loop = true;
     f.type = 'lowpass';
-    f.frequency.value = 320;
+    f.frequency.value = 260;
     g.gain.value = 0;
     src.connect(f).connect(g).connect(sfxOut);
+    var f2 = ac.createBiquadFilter(),
+      g2 = ac.createGain();
+    f2.type = 'bandpass';
+    f2.frequency.value = 1100;
+    f2.Q.value = .7;
+    g2.gain.value = .18;
+    src.connect(f2).connect(g2).connect(g);
     src.start();
     rumble = g;
   }
   rumble.gain.setTargetAtTime(level, ac.currentTime, .12);
+}
+// モーターの「ういーん」（インバーターの音）。高さは速さ、大きさは加速・減速の強さで変える
+var motorBuf = null;
+function motorBuffer() {
+  if (motorBuf) return motorBuf;
+  var sr = ac.sampleRate,
+    n = sr; // 1秒。どの音も1秒に整数回なので、くりかえしても つなぎめが出ない
+  motorBuf = ac.createBuffer(1, n, sr);
+  var d = motorBuf.getChannelData(0);
+  var H = [[1, 1], [2, .5], [3, .35], [4, .2], [6, .12], [8, .06]];
+  for (var i = 0; i < n; i++) {
+    var t = i / sr;
+    var v = 0;
+    for (var k = 0; k < H.length; k++) v += H[k][1] * Math.sin(2 * Math.PI * 300 * H[k][0] * t);
+    v += .22 * Math.sin(2 * Math.PI * 1500 * t + 3 * Math.sin(2 * Math.PI * 30 * t));
+    d[i] = v * .22;
+  }
+  return motorBuf;
+}
+function startMotor(tr) {
+  if (!ac || tr.motor) return;
+  var src = ac.createBufferSource(),
+    f = ac.createBiquadFilter(),
+    g = ac.createGain();
+  src.buffer = motorBuffer();
+  src.loop = true;
+  f.type = 'lowpass';
+  f.frequency.value = 2400;
+  g.gain.value = 0;
+  src.connect(f).connect(g).connect(sfxOut);
+  src.start();
+  tr.motor = {
+    src,
+    g,
+    level: 0
+  };
+}
+function updateMotor(tr) {
+  var m = tr.motor;
+  if (!m) return;
+  var r = Math.max(0, tr.v / tr.speed);
+  m.src.playbackRate.value = .28 + 1.05 * r;
+  var push = Math.min(1, Math.abs(tr.accel || 0) / (tr.speed * .3));
+  // 画面に見えている ぶんだけ鳴らす（奥の線路は すこし小さく）
+  var vis = Math.max(0, Math.min(tr.x + tr.len, G.W) - Math.max(tr.x, 0)) / Math.min(G.W, tr.len);
+  var level = r > .01 ? (.014 + .05 * push) * Math.max(tr.move ? 1 : 0, vis) * (tr.near ? 1 : .6) : 0;
+  if (Math.abs(level - m.level) > .003) {
+    m.level = level;
+    m.g.gain.setTargetAtTime(level, ac.currentTime, .15);
+  }
+}
+function stopMotor(tr) {
+  var m = tr.motor;
+  if (!m) return;
+  tr.motor = null;
+  m.g.gain.setTargetAtTime(0, ac.currentTime, .1);
+  setTimeout(() => {
+    try {
+      m.src.stop();
+    } catch (err) {}
+  }, 600);
 }
 // おばけでんしゃの「ひゅ〜どろどろ」
 function ghostSound() {
@@ -1181,7 +1317,9 @@ function ghostSound() {
 }
 // くるまの「ぷっぷー」
 var carHorn = () => {
-  if (!ac) return;
+  if (!ac || play('carhorn', {
+    vol: .35
+  })) return;
   var t = ac.currentTime + .01;
   [[0, .12], [.2, .3]].forEach(([s, d]) => [311, 392].forEach(f => glide(t + s, [[0, f], [d, f]], {
     type: 'sawtooth',
@@ -1842,41 +1980,38 @@ function renderSky() {
 }
 
 // ---------- 電車の絵 ----------
-// 1両を SVG で描く。右へ走るときの形で描き（右が前）、左へ走るときは左右をひっくり返す。
-// 字（行き先表示・絵文字）は、ひっくり返さないように、あとから上に重ねる
+// 1両の車体を SVG で描いて、画像にしておく（たくさん動かしても軽い）。右へ走るときの形で描き（右が前）、
+// 左へ走るときは左右をひっくり返す。台車と車輪は別の部品にして、車体だけが ばねで ゆれ、車輪は回る
 var CAR_T = 44,
   CAR_B = 120; // 車体の上と下
 var DOORS = [50, 150, 250];
 // 窓：[左, はば]。ドアとドアのあいだに2枚ずつ
 var WINDOWS = [[68, 31], [101, 31], [168, 31], [201, 31]];
+var BOGIES = [62, 238];
+var WHEEL_R = 7.5;
+var windowsOf = (cabL, cabR) => WINDOWS.concat([cabL ? [20, 18] : [10, 26], cabR ? [262, 18] : [264, 26]]);
 function bodyPath(cabL, cabR) {
   var T = CAR_T,
     B = CAR_B;
   return `M${cabL ? 20 : 6} ${T} L${cabR ? 280 : 294} ${T} ` + (cabR ? `Q296 ${T} 297 ${T + 26} ` : '') + `L${cabR ? 297 : 294} ${B} L${cabL ? 3 : 6} ${B} ` + (cabL ? `L3 ${T + 26} Q4 ${T} 20 ${T} Z` : `L6 ${T} Z`);
 }
-// 車体の形での切りぬき（4とおり）は、はじめに1回だけ作る
-(function () {
-  var s = '';
-  [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(([l, r]) => {
-    s += `<clipPath id="cl${l}${r}"><path d="${bodyPath(l, r)}"/></clipPath>`;
-  });
-  $('#defs').insertAdjacentHTML('beforeend', s);
-})();
-function carSVG(t, i, n, dir, {
-  quiet = false
-} = {}) {
+var svgURI = s => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}`;
+// 車体の絵（台車と車輪は のぞく）。seat は お客さんの すわりかたの ちがい（0 は だれもいない）
+function carBodySVG(t, i, n, dir, seat) {
   var T = CAR_T,
     B = CAR_B;
   var ghost = t.deco === 'ghost';
   var cabR = i === 0,
     cabL = i === n - 1;
   var mx = (x, w = 0) => dir > 0 ? x : 300 - x - w;
-  var glass = ghost ? 'url(#gGhostGlass)' : 'url(#gGlass)';
+  var rnd = seeded(seat * 977 + 13);
   var s = '',
     top = '';
   // 屋根とクーラー
   s += `<rect x="16" y="${T - 7}" width="268" height="9" rx="4" fill="${ghost ? '#cdd2f7' : '#8e9196'}"/>`;
+  s += `<rect x="16" y="${T - 7}" width="268" height="2.5" rx="1" fill="rgba(255,255,255,.25)"/>`;
   s += `<rect x="112" y="${T - 13}" width="76" height="8" rx="3" fill="${ghost ? '#dde0fb' : '#b7babe'}"/>`;
+  s += `<rect x="118" y="${T - 12}" width="64" height="2" fill="rgba(0,0,0,.12)"/>`;
   // パンタグラフ（シングルアーム）
   if (!ghost && n >= 3 && i % 3 === 1) {
     s += `<path d="M58 ${T - 7} L86 ${T - 21} L68 5" stroke="#4b4e53" stroke-width="2.6" fill="none" stroke-linejoin="round"/>`;
@@ -1886,39 +2021,36 @@ function carSVG(t, i, n, dir, {
   if (!cabL) s += `<rect x="0" y="${T + 8}" width="7" height="${B - T - 14}" fill="#2c2c2e"/><rect x="0" y="${B - 3}" width="8" height="6" fill="#3a3a3c"/>`;
   if (!cabR) s += `<rect x="293" y="${T + 8}" width="7" height="${B - T - 14}" fill="#2c2c2e"/><rect x="292" y="${B - 3}" width="8" height="6" fill="#3a3a3c"/>`;
   // 車体
-  s += `<path d="${bodyPath(cabL, cabR)}" fill="${ghost ? '#eef1ff' : 'url(#gMaroon)'}"/>`;
-  s += `<g clip-path="url(#cl${cabL ? 1 : 0}${cabR ? 1 : 0})">`;
-  // アイボリーの屋根のふちと、つやの線
+  s += `<path d="${bodyPath(cabL, cabR)}" fill="${ghost ? '#eef1ff' : 'url(#m)'}"/>`;
+  s += '<g clip-path="url(#c)">';
+  // アイボリーの屋根のふちと、つやの線、すその かげ
   s += `<rect x="0" y="${T}" width="300" height="8" fill="${ghost ? '#dfe3ff' : '#efe6cc'}"/>`;
-  s += `<rect x="0" y="${T + 8}" width="300" height="2" fill="rgba(255,255,255,.14)"/>`;
-  s += `<rect x="0" y="${B - 5}" width="300" height="5" fill="rgba(0,0,0,.12)"/>`;
+  s += `<rect x="0" y="${T + 8}" width="300" height="2" fill="rgba(255,255,255,.16)"/>`;
+  s += `<rect x="0" y="${T + 47}" width="300" height="1.5" fill="rgba(255,255,255,.08)"/>`;
+  s += `<rect x="0" y="${B - 6}" width="300" height="6" fill="rgba(0,0,0,.14)"/>`;
   // ドア
   DOORS.forEach(c => {
     s += `<rect x="${c - 13}" y="${T + 10}" width="26" height="${B - T - 11}" fill="${ghost ? '#e2e6ff' : '#5e161c'}" stroke="${ghost ? '#c9cff5' : '#3f0d12'}" stroke-width="1.2"/>`;
-    s += `<rect x="${c - 8}" y="${T + 14}" width="16" height="30" rx="2" fill="${glass}" stroke="#d3d8de" stroke-width="2"/>`;
+    s += `<rect x="${c - .4}" y="${T + 10}" width=".8" height="${B - T - 11}" fill="rgba(0,0,0,.35)"/>`;
+    s += `<rect x="${c - 10}" y="${T + 14}" width="8" height="30" rx="1.5" fill="url(#g)" stroke="#d3d8de" stroke-width="1.6"/><rect x="${c + 2}" y="${T + 14}" width="8" height="30" rx="1.5" fill="url(#g)" stroke="#d3d8de" stroke-width="1.6"/>`;
   });
-  // 窓（銀色の窓わく）
-  var wins = WINDOWS.slice();
-  wins.push(cabL ? [20, 18] : [10, 26]);
-  wins.push(cabR ? [262, 18] : [264, 26]);
-  wins.forEach(([x, w], k) => {
-    s += `<rect x="${x}" y="${T + 14}" width="${w}" height="30" rx="2.5" fill="${glass}" stroke="#d7dbe0" stroke-width="2.6"/>`;
-    var cx = x + w / 2,
-      cy = T + 30;
-    if (t.deco === 'animal') top += `<text x="${mx(cx)}" y="${cy + 7}" font-size="${w < 22 ? 14 : 20}" text-anchor="middle" class="emo">${ANIMALS[(i * 6 + k) % ANIMALS.length]}</text>`;else if (ghost) {
-      if ((i + k) % 2 === 0) top += `<text x="${mx(cx)}" y="${cy + 7}" font-size="${w < 22 ? 14 : 19}" text-anchor="middle" class="emo">👻</text>`;
-    }
+  // 窓（銀色の窓わく）と、ガラスに うつる空
+  windowsOf(cabL, cabR).forEach(([x, w]) => {
+    s += `<rect x="${x}" y="${T + 14}" width="${w}" height="30" rx="2.5" fill="url(#g)" stroke="#d7dbe0" stroke-width="2.6"/>`;
+    s += `<path d="M${x + 3} ${T + 17} L${x + w * .45} ${T + 17} L${x + 3} ${T + 30} Z" fill="rgba(255,255,255,.35)"/>`;
     // お客さん（かげ）
-    else if (!quiet && w > 22 && Math.random() < .45) s += `<circle cx="${f1(cx + rand(-6, 6))}" cy="${T + 36}" r="5.5" fill="#5d6c7a"/><rect x="${f1(cx - 9)}" y="${T + 41}" width="18" height="4" rx="2" fill="#5d6c7a"/>`;
+    var cx = x + w / 2;
+    if (seat && !t.deco && w > 22 && rnd() < .5) s += `<circle cx="${f1(cx + (rnd() - .5) * 12)}" cy="${T + 36}" r="5.5" fill="#5d6c7a"/><rect x="${f1(cx - 9)}" y="${T + 41}" width="18" height="4" rx="2" fill="#5d6c7a"/>`;
   });
   // 運転台：前は前照灯、うしろは尾灯
   if (cabR) {
     s += `<path d="M281 ${T + 3} Q293 ${T + 4} 295 ${T + 24} L295 ${T + 42} L284 ${T + 42} Z" fill="#20262c"/>`;
-    s += `<rect x="286" y="${B - 17}" width="9" height="6" rx="2" fill="#fff4b8"/><circle cx="292" cy="${B - 14}" r="9" fill="#fff2a8" opacity=".35"/>`;
+    s += `<path d="M284 ${T + 6} Q290 ${T + 7} 292 ${T + 18} L287 ${T + 18} Z" fill="rgba(255,255,255,.25)"/>`;
+    s += `<circle cx="292" cy="${B - 14}" r="10" fill="#fff2a8" opacity=".35"/><rect x="286" y="${B - 17}" width="9" height="6" rx="2" fill="#fffbe0"/>`;
   }
   if (cabL) {
     s += `<path d="M19 ${T + 3} Q7 ${T + 4} 5 ${T + 24} L5 ${T + 42} L16 ${T + 42} Z" fill="#20262c"/>`;
-    s += `<rect x="5" y="${B - 17}" width="9" height="6" rx="2" fill="#ff3b30"/>`;
+    s += `<circle cx="9" cy="${B - 14}" r="7" fill="#ff5a4f" opacity=".3"/><rect x="5" y="${B - 17}" width="9" height="6" rx="2" fill="#ff3b30"/>`;
   }
   // はなの でんしゃ：車体の下のほうに花
   if (t.deco === 'flower') {
@@ -1942,16 +2074,55 @@ function carSVG(t, i, n, dir, {
     top += `<rect x="${mx(170, 27)}" y="${T + 16}" width="27" height="12" fill="#111"/>`;
     top += `<text x="${mx(183.5)}" y="${T + 25.5}" font-size="${t.label.length > 2 ? 7 : 9}" font-weight="900" text-anchor="middle" fill="${t.led}" font-family="sans-serif">${t.label}</text>`;
   }
-  // 床下の機器と台車
+  // 床下の機器（台車は べつの部品）
   s += `<rect x="28" y="${B}" width="244" height="6" fill="#2f3236"/><rect x="104" y="${B}" width="40" height="10" rx="1" fill="#464a50"/><rect x="160" y="${B}" width="34" height="9" rx="1" fill="#464a50"/>`;
-  [62, 238].forEach(c => {
-    s += `<rect x="${c - 25}" y="${B + 5}" width="50" height="8" rx="2" fill="#26282c"/>`;
-    [c - 14, c + 14].forEach(w => {
-      s += `<circle cx="${w}" cy="133" r="7" fill="#1b1c1f"/><circle cx="${w}" cy="133" r="2.5" fill="#8a8d92"/>`;
-    });
-  });
   var flip = dir > 0 ? '' : ' transform="translate(300 0) scale(-1 1)"';
-  return `<svg viewBox="0 0 300 140" aria-hidden="true"><g${flip}>${s}</g>${top}</svg>`;
+  var defs = `<defs><linearGradient id="m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2830"/><stop offset=".45" stop-color="#6b1a20"/><stop offset="1" stop-color="#4e1117"/></linearGradient>` + `<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${ghost ? '#f3edff' : '#dae9f3'}"/><stop offset="1" stop-color="${ghost ? '#c3b0ff' : '#8aa4b8'}"/></linearGradient>` + `<clipPath id="c"><path d="${bodyPath(cabL, cabR)}"/></clipPath></defs>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 140">${defs}<g${flip}>${s}</g>${top}</svg>`;
+}
+var carCache = {};
+function carImage(t, i, n, dir, seat) {
+  var key = [t.id, i === 0, i === n - 1, n >= 3 && i % 3 === 1, dir, seat].join('|');
+  return carCache[key] || (carCache[key] = svgURI(carBodySVG(t, i, n, dir, seat)));
+}
+// 台車と車輪の絵（どの電車も同じ）
+var BOGIE_URI = svgURI('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 54 14"><rect x="2" y="2" width="50" height="8" rx="2" fill="#26282c"/><rect x="21" y="0" width="12" height="5" rx="1" fill="#3a3d42"/><path d="M8 3.5h7M8 6h7M8 8.5h7M39 3.5h7M39 6h7M39 8.5h7" stroke="#5a5e64" stroke-width="1.1"/><rect x="2" y="2" width="50" height="1.2" fill="rgba(255,255,255,.15)"/></svg>');
+var WHEEL_URI = svgURI('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -10 20 20"><circle r="9.6" fill="#1b1c1f"/><circle r="7.4" fill="none" stroke="#3d4045" stroke-width="1.3"/><path d="M0 0L0-7M0 0L6.1 3.5M0 0L-6.1 3.5" stroke="#6a6e74" stroke-width="1.9" stroke-linecap="round"/><circle r="2.7" fill="#8f9297"/><circle cx="0" cy="-5.2" r="1" fill="#9a9da2"/></svg>');
+(function () {
+  var st = document.createElement('style');
+  st.textContent = `.bogie{background-image:url("${BOGIE_URI}")}.wheel{background-image:url("${WHEEL_URI}")}`;
+  document.head.appendChild(st);
+})();
+var pc = (v, of) => `${f1(v / of * 100)}%`;
+// 1両ぶんの部品（車体・台車・車輪）を作る
+function buildCar(t, i, n, dir, h, {
+  quiet = false
+} = {}) {
+  var w = h * 300 / 140;
+  var cabR = i === 0,
+    cabL = i === n - 1;
+  var b = document.createElement('div');
+  b.className = 'carbox';
+  b.style.width = `${f1(w)}px`;
+  b.style.height = `${f1(h)}px`;
+  var html = `<div class="body" style="animation-duration:${rand(.75, 1.15).toFixed(2)}s;animation-delay:${(-rand(0, 1.2)).toFixed(2)}s"><img alt="" draggable="false" src="${carImage(t, i, n, dir, quiet ? 0 : 1 + (i + n) % 3)}">`;
+  // 窓の中の どうぶつ・おばけ（絵文字は画像の中だと出ない端末があるので、上に重ねる）
+  if (t.deco === 'animal' || t.deco === 'ghost') {
+    windowsOf(cabL, cabR).forEach(([x, wd], k) => {
+      if (t.deco === 'ghost' && (i + k) % 2) return;
+      var cx = dir > 0 ? x + wd / 2 : 300 - x - wd / 2;
+      html += `<span class="winemo" style="left:${pc(cx, 300)};top:${pc(CAR_T + 31, 140)};font-size:${f1(h * (wd < 22 ? 12 : 17) / 140)}px">${t.deco === 'ghost' ? '👻' : ANIMALS[(i * 6 + k) % ANIMALS.length]}</span>`;
+    });
+  }
+  html += '</div>';
+  BOGIES.forEach(c => {
+    [c - 14, c + 14].forEach(x => {
+      html += `<i class="wheel" style="left:${pc(x - WHEEL_R, 300)};top:${pc(133 - WHEEL_R, 140)};width:${pc(WHEEL_R * 2, 300)};height:${pc(WHEEL_R * 2, 140)}"></i>`;
+    });
+    html += `<i class="bogie" style="left:${pc(c - 27, 300)};top:${pc(CAR_B + 3, 140)};width:${pc(54, 300)};height:${pc(14, 140)}"></i>`;
+  });
+  b.innerHTML = html;
+  return b;
 }
 
 // ---------- 走る電車 ----------
@@ -1975,18 +2146,15 @@ function makeTrain(t, dir, {
   var order = [];
   for (var i = 0; i < n; i++) order.push(dir > 0 ? n - 1 - i : i);
   order.forEach((i, k) => {
-    var b = document.createElement('div');
-    b.className = 'carbox';
-    b.style.width = `${f1(w)}px`;
-    b.style.height = `${f1(h)}px`;
+    var b = buildCar(t, i, n, dir, h);
     if (k) b.style.marginLeft = `${f1(gap)}px`;
     if (t.deco === 'ghost') b.style.animationDelay = `${-k * .22}s`;
-    b.innerHTML = carSVG(t, i, n, dir);
     el.appendChild(b);
     boxes[i] = b;
   });
   var len = n * w + (n - 1) * gap;
   el.style.top = `${f1((near ? G.nearRail : G.farRail) - h)}px`;
+  var sp = (speed || t.speed) * w;
   var tr = {
     t,
     dir,
@@ -1999,12 +2167,14 @@ function makeTrain(t, dir, {
     n,
     boxes,
     order,
-    speed: (speed || t.speed) * w,
-    v: (speed || t.speed) * w,
+    speed: sp,
+    v: sp,
     x: dir > 0 ? -len - 8 : G.W + 8,
     sides: [],
     passed: [],
-    flow
+    flow,
+    rot: 0,
+    wheelPx: h * WHEEL_R / 140
   };
   tr.el.style.transform = `translate3d(${f1(tr.x)}px,0,0)`;
   onPress(el, () => trainTap(tr));
@@ -2027,6 +2197,7 @@ function runTrain(tr, {
 function endTrain(tr) {
   var i = running.indexOf(tr);
   if (i >= 0) running.splice(i, 1);
+  stopMotor(tr);
   tr.el.remove();
   tr.resolve();
 }
@@ -2035,11 +2206,23 @@ function stepTrain(tr, dt) {
     endTrain(tr);
     return;
   }
+  var v0 = tr.v;
   if (tr.move) tr.x = tr.move(tr, dt);else {
     tr.v = tr.speed;
     tr.x += tr.dir * tr.speed * dt;
   }
+  tr.accel = dt ? (tr.v - v0) / dt : 0;
   tr.el.style.transform = `translate3d(${f1(tr.x)}px,0,0)`;
+  // 車輪を回す。走っている間だけ、車体が ばねで ゆれる
+  if (tr.v > 0) {
+    tr.rot = (tr.rot + tr.dir * tr.v * dt / tr.wheelPx * 57.3) % 360;
+    tr.el.style.setProperty('--rot', `${tr.rot.toFixed(1)}deg`);
+  }
+  var mv = tr.v > tr.h * .08;
+  if (mv !== tr.moving) {
+    tr.moving = mv;
+    tr.el.classList.toggle('moving', mv);
+  }
   if (!tr.entered && (tr.dir > 0 ? tr.x + tr.len > 0 : tr.x < G.W)) {
     tr.entered = true;
     if (tr.onEnter) tr.onEnter(tr);
@@ -2061,8 +2244,30 @@ function stepTrain(tr, dt) {
       tr.onCar(i, tr.boxes[i]);
     }
   });
-  for (var c = 0; c < Math.min(clicks, 2); c++) setTimeout(() => clack(tr.near ? 1 : .6), c * 45);
+  var loud = (tr.near ? 1 : .6) * Math.min(1, .35 + tr.v / tr.speed);
+  for (var c = 0; c < Math.min(clicks, 2); c++) setTimeout(() => clack(loud), c * 40);
   if (tr.dir > 0 ? tr.x > G.W + 8 : tr.x + tr.len < -8) endTrain(tr);
+}
+// 止まったときに、車体が前へ のめって もどる
+function settle(tr) {
+  tr.boxes.forEach((b, k) => anim(b.firstChild, [{
+    transform: 'translateX(0) rotate(0deg)'
+  }, {
+    transform: `translateX(${tr.dir * 1.6}%) rotate(${tr.dir * .4}deg)`,
+    offset: .28
+  }, {
+    transform: `translateX(${-tr.dir * .7}%) rotate(${-tr.dir * .2}deg)`,
+    offset: .62
+  }, {
+    transform: `translateX(${tr.dir * .2}%) rotate(0deg)`,
+    offset: .85
+  }, {
+    transform: 'translateX(0) rotate(0deg)'
+  }], {
+    duration: 1100,
+    delay: k * 30,
+    easing: 'ease-in-out'
+  }));
 }
 var lastTap = 0;
 // 走っている電車をさわると、警笛を鳴らして、お客さんが手をふる
@@ -2206,6 +2411,27 @@ var XING = {
       arms.forEach(a => a.classList.remove('up'));
       gateMotor();
     }, 700));
+    // おりきったところで、棒の先が すこし しなって もどる
+    this.timers.push(setTimeout(() => arms.forEach((a, k) => {
+      var s = k ? -1 : 1;
+      anim(a, [{
+        transform: 'rotate(0deg)'
+      }, {
+        transform: `rotate(${s * 2.4}deg)`,
+        offset: .3
+      }, {
+        transform: `rotate(${-s * 1}deg)`,
+        offset: .62
+      }, {
+        transform: `rotate(${s * .4}deg)`,
+        offset: .85
+      }, {
+        transform: 'rotate(0deg)'
+      }], {
+        duration: 650,
+        easing: 'ease-out'
+      });
+    }), 700 + 2200));
   },
   setDirs(d) {
     posts.forEach(p => {
@@ -2222,7 +2448,7 @@ var XING = {
     gateMotor();
     BGM.hush(false);
     var tok = ++this.tok;
-    return wait(1900).then(() => {
+    return wait(2200).then(() => {
       if (tok === this.tok) this.closed = false;
     });
   },
@@ -2286,6 +2512,7 @@ function _crossing() {
               cars,
               speed
             });
+            startMotor(it.train);
             return runTrain(it.train, {
               onEnter: onEnter && (() => onEnter(it)),
               onCar
@@ -2338,14 +2565,14 @@ function vehSVG(kind, color, front) {
     s += `<rect x="8" y="9" width="44" height="${front ? 20 : 14}" rx="3" fill="#bfe3f5"/>`;
     if (front) {
       s += '<rect x="16" y="5" width="28" height="4" rx="1" fill="#222"/><circle cx="11" cy="42" r="3.6" fill="#fff6b0"/><circle cx="49" cy="42" r="3.6" fill="#fff6b0"/>';
-    } else s += '<rect x="7" y="38" width="7" height="6" rx="1.5" fill="#ff3b30"/><rect x="46" y="38" width="7" height="6" rx="1.5" fill="#ff3b30"/>';
+    } else s += '<ellipse class="tlg" cx="10.5" cy="41" rx="8" ry="6" fill="#ff4d4d"/><ellipse class="tlg" cx="49.5" cy="41" rx="8" ry="6" fill="#ff4d4d"/><rect x="7" y="38" width="7" height="6" rx="1.5" fill="#ff3b30"/><rect x="46" y="38" width="7" height="6" rx="1.5" fill="#ff3b30"/>';
     s += '<rect x="22" y="44" width="16" height="5" rx="1.5" fill="#fff"/><rect x="6" y="53" width="9" height="7" rx="2" fill="#222"/><rect x="45" y="53" width="9" height="7" rx="2" fill="#222"/>';
     return `<svg viewBox="0 0 60 60" aria-hidden="true">${s}</svg>`;
   }
   s += `<path d="M12 20 L17 6 Q18 3 21 3 L39 3 Q42 3 43 6 L48 20 Z" fill="${color}"/>`;
   s += `<rect x="3" y="18" width="54" height="22" rx="7" fill="${color}"/>`;
   s += '<path d="M15 19 L19 8 L41 8 L45 19 Z" fill="#bfe3f5"/>';
-  if (front) s += '<circle cx="12" cy="28" r="4" fill="#fff6b0"/><circle cx="48" cy="28" r="4" fill="#fff6b0"/><rect x="18" y="25" width="24" height="5" rx="2" fill="rgba(0,0,0,.25)"/>';else s += '<rect x="7" y="25" width="9" height="5" rx="2" fill="#ff3b30"/><rect x="44" y="25" width="9" height="5" rx="2" fill="#ff3b30"/>';
+  if (front) s += '<circle cx="12" cy="28" r="4" fill="#fff6b0"/><circle cx="48" cy="28" r="4" fill="#fff6b0"/><rect x="18" y="25" width="24" height="5" rx="2" fill="rgba(0,0,0,.25)"/>';else s += '<ellipse class="tlg" cx="11.5" cy="27.5" rx="9" ry="6" fill="#ff4d4d"/><ellipse class="tlg" cx="48.5" cy="27.5" rx="9" ry="6" fill="#ff4d4d"/><rect x="7" y="25" width="9" height="5" rx="2" fill="#ff3b30"/><rect x="44" y="25" width="9" height="5" rx="2" fill="#ff3b30"/>';
   s += '<rect x="22" y="32" width="16" height="5" rx="1.5" fill="#fff" opacity=".9"/><rect x="6" y="39" width="9" height="7" rx="2" fill="#222"/><rect x="45" y="39" width="9" height="7" rx="2" fill="#222"/>';
   return `<svg viewBox="0 0 60 46" aria-hidden="true">${s}</svg>`;
 }
@@ -2366,12 +2593,14 @@ function spawnVehicle(up) {
   el.style.width = `${f1(w)}px`;
   el.style.height = `${f1(h)}px`;
   el.innerHTML = `<span class="inner">${vehSVG(kind, kind === 'bus' ? pick(['#43a36b', '#f39c32', '#3f7fd6']) : pick(VEH_COLORS), !up)}</span>`;
+  var sp = G.carH * rand(1.3, 1.8);
   var v = {
     el,
     up,
     h,
     y: up ? G.H + h * 2 : G.horizonY + 2,
-    speed: G.carH * rand(1.3, 1.8),
+    speed: sp,
+    cur: sp,
     flow
   };
   (up ? $('#frontTraffic') : $('#backTraffic')).appendChild(el);
@@ -2392,20 +2621,36 @@ function stepVehicle(v, dt) {
     return;
   }
   var sc = Math.min(1.3, roadHalf(v.y) / G.R);
-  var ny = v.y + (v.up ? -1 : 1) * v.speed * sc * dt;
-  // 踏切がしまっているときは、停止線でとまる
+  var dirY = v.up ? -1 : 1;
+  // 止まらなければいけない所までの きょり（停止線や、前のくるま）
+  var room = Infinity;
   if (XING.closed) {
-    if (v.up && v.y >= G.stopNear - 1) ny = Math.max(ny, G.stopNear);
-    if (!v.up && v.y <= G.stopFar + 1) ny = Math.min(ny, G.stopFar);
+    if (v.up && v.y >= G.stopNear - 1) room = v.y - G.stopNear;
+    if (!v.up && v.y <= G.stopFar + 1) room = G.stopFar - v.y;
   }
-  // 前のくるまに ぶつからないように
   vehicles.forEach(o => {
     if (o === v || o.up !== v.up) return;
     var osc = Math.min(1.3, roadHalf(o.y) / G.R);
-    if (v.up && o.y < v.y) ny = Math.max(ny, o.y + o.h * osc + 6);
-    if (!v.up && o.y > v.y) ny = Math.min(ny, o.y - o.h * osc - 6);
+    if (v.up && o.y < v.y) room = Math.min(room, v.y - (o.y + o.h * osc + 8));
+    if (!v.up && o.y > v.y) room = Math.min(room, o.y - o.h * osc - 8 - v.y);
   });
+  // その きょりで止まれる速さまで、なめらかに ゆるめる。走りだしは ゆっくり
+  var brakeA = G.carH * 2.2;
+  var target = Math.min(v.speed, Math.sqrt(2 * brakeA * Math.max(0, room)));
+  v.cur = target < v.cur ? target : Math.min(target, v.cur + G.carH * 1.1 * dt);
+  var ny = v.y + dirY * v.cur * sc * dt;
+  if (room !== Infinity) ny = v.up ? Math.max(ny, v.y - Math.max(0, room)) : Math.min(ny, v.y + Math.max(0, room));
   v.y = ny;
+  var braking = v.cur < v.speed * .8 && room !== Infinity;
+  if (braking !== v.braking) {
+    v.braking = braking;
+    v.el.classList.toggle('brake', braking);
+  }
+  var going = v.cur > v.speed * .2;
+  if (going !== v.going) {
+    v.going = going;
+    v.el.classList.toggle('go', going);
+  }
   // 手前へ来るくるまは、手前の線路をこえたら前の層へ
   if (!v.up && !v.front && v.y > G.nearRail + G.carH * .12) {
     v.front = true;
@@ -2430,7 +2675,10 @@ var loopOn = false,
 function frame(now) {
   var dt = Math.min(.05, Math.max(0, (now - lastT) / 1000));
   lastT = now;
-  running.slice().forEach(tr => stepTrain(tr, dt));
+  running.slice().forEach(tr => {
+    stepTrain(tr, dt);
+    updateMotor(tr);
+  });
   vehicles.slice().forEach(v => stepVehicle(v, dt));
   var rum = 0;
   running.forEach(tr => {
@@ -2481,11 +2729,39 @@ var P = {
   zukanAll: 'ぜんぶの　でんしゃに　あえたね！　すごい！',
   notYet: 'まだ　あって　いない　でんしゃだよ。'
 };
-var COUNT = ['いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち'];
+// かぞえる声（字幕は のばして書き、声は漢字で読ませると はっきりする）
+var COUNT = ['いーち', 'にー', 'さーん', 'よーん', 'ごー', 'ろーく', 'なーな', 'はーち'];
 var RYO = ['いちりょう', 'にりょう', 'さんりょう', 'よんりょう', 'ごりょう', 'ろくりょう', 'ななりょう', 'はちりょう'];
+var KANSUJI = ['', '一', '二', '三', '四', '五', '六', '七', '八'];
 var streakLine = n => `${n}かい、れんぞく！`;
+// 声を作るときに読ませる文（字幕はひらがなのまま）。漢字まじりにすると、はっきりした発音と抑揚になる
+var READ = {
+  'じょうずに　できたね！': '上手に、できたね！',
+  'おりる　おきゃくさんが　さきだよ。': '降りるお客さんが、先だよ。',
+  'なんりょう　だった？': '何両だった？',
+  'はなまる　あげる！': 'はなまる、あげる！',
+  'とっきゅう！　はやーい！': '特急！はやーい！',
+  'ドアが　しまりまーす。': 'ドアが、閉まりまーす。',
+  'みんな　のったね！　ドアを　しめてね！': 'みんな乗ったね！ドアを、閉めてね！',
+  'ながーい　でんしゃ！': '長ーい電車！',
+  'でんしゃずかん　だよ！': '電車図鑑だよ！',
+  'ぜんぶの　でんしゃに　あえたね！　すごい！': '全部の電車に、会えたね！すごい！',
+  'こんにちは！　いっしょに　あそぼうね！': 'こんにちは！一緒に、遊ぼうね！',
+  'でんしゃは　なんりょう　かな？　いっしょに　かぞえよう！': '電車は、何両かな？一緒に、数えよう！',
+  'とうちゃーく！　ドアを　あけてね！': '到着ー！ドアを、開けてね！',
+  'おきゃくさんを　のせてあげよう！': 'お客さんを、乗せてあげよう！',
+  'しゅっぱつの　ボタンを　おしてね！': '出発のボタンを、押してね！',
+  'しゅっぱつ　しんこう！': '出発、進行！'
+};
+RYO.forEach((r, i) => {
+  READ[`${r}！`] = `${KANSUJI[i + 1]}両！`;
+});
+COUNT.forEach((c, i) => {
+  READ[`${c}！`] = `${KANSUJI[i + 1]}！`;
+});
+for (var n = 2; n <= 8; n++) READ[streakLine(n)] = `${KANSUJI[n]}回、連続！`;
 // 大きく出すほめ言葉と、そのあとに声で言うことば
-var PRAISE = [['すごーい！', 'すごーい！'], ['やったね！', 'やったね！'], ['せいかい！', 'ぴんぽーん！　だいせいかい！'], ['てんさい！', 'てんさいだね！'], ['かんぺき！', 'かんぺき！'], ['ばっちり！', 'ばっちり！'], ['よくできました！', 'よくできました！'], ['はなまる！', 'はなまる　あげる！'], ['じょうず！', 'じょうず　じょうず！']];
+var PRAISE = [['すごーい！', 'すごーい！'], ['やったね！', 'やったね！'], ['せいかい！', 'ぴんぽーん！　だいせいかい！'], ['てんさい！', 'てんさいだね！'], ['かんぺき！', 'かんぺき！'], ['ばっちり！', 'ばっちり！'], ['よくできました！', 'よくできました！'], ['はなまる！', 'はなまる　あげる！'], ['じょうず！', 'じょうずに　できたね！']];
 var STAMPS = ['hanamaru', 'hanamaru', 'hanamaru', '🌟', '👑', '🏅'];
 var ROUNDS = 5;
 
@@ -2727,7 +3003,7 @@ function goCount() {
 }
 function _goCount() {
   _goCount = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
-    var my, st, PLAN, round, _PLAN$round, lo, hi, n;
+    var my, st, PLAN, round, _PLAN$round, lo, hi, _n2;
     return _regenerator().w(function (_context3) {
       while (1) switch (_context3.n) {
         case 0:
@@ -2759,9 +3035,9 @@ function _goCount() {
           return _context3.a(2);
         case 3:
           _PLAN$round = _slicedToArray(PLAN[round], 2), lo = _PLAN$round[0], hi = _PLAN$round[1];
-          n = lo + Math.floor(Math.random() * (hi - lo + 1));
+          _n2 = lo + Math.floor(Math.random() * (hi - lo + 1));
           _context3.n = 4;
-          return countRound(n, st);
+          return countRound(_n2, st);
         case 4:
           if (!(my !== flow)) {
             _context3.n = 5;
@@ -3006,12 +3282,15 @@ function spawnWaiting() {
   var animals = shuffle(ANIMALS).slice(0, n);
   waiting = animals.map((e, k) => {
     var el = document.createElement('div');
-    el.className = 'pax';
+    el.className = 'pax idle';
+    el.style.animationDelay = `${(-rand(0, 1.6)).toFixed(2)}s`;
     el.setAttribute('role', 'button');
     el.setAttribute('aria-label', 'おきゃくさん');
     el.textContent = e;
     var x = G.W * (k + .5) / n + rand(-.06, .06) * G.W / n;
-    el.style.cssText = `left:${f1(x)}px;top:${f1(feetY())}px;font-size:${f1(paxSize())}px`;
+    el.style.left = `${f1(x)}px`;
+    el.style.top = `${f1(feetY())}px`;
+    el.style.fontSize = `${f1(paxSize())}px`;
     layer.appendChild(el);
     anim(el, [{
       transform: 'translate(-50%,-100%) translateY(40%) scale(.2)',
@@ -3042,7 +3321,7 @@ function addDoors(tr) {
     d.style.cssText = `left:${f1((c - 13) / 3)}%;top:${f1((CAR_T + 10) / 1.4)}%;width:${f1(26 / 3)}%;height:${f1((CAR_B - CAR_T - 11) / 1.4)}%`;
     if (ghost) d.style.setProperty('--dc', '#e2e6ff');
     d.innerHTML = '<i></i><i></i>';
-    b.appendChild(d);
+    b.firstChild.appendChild(d);
   }));
 }
 // 画面に見えているドアの、まん中と床の位置
@@ -3118,15 +3397,20 @@ function hop(el, x0, y0, x1, y1, {
   endScale = 1,
   fade = false
 } = {}) {
+  el.classList.remove('idle');
   var frames = [];
-  for (var i = 0; i <= 10; i++) {
-    var e = i / 10;
+  var N = 16;
+  for (var i = 0; i <= N; i++) {
+    var e = i / N;
     var dx = (x1 - x0) * e,
       dy = (y1 - y0) * e - arc * Math.sin(Math.PI * e);
     var sc = 1 + (endScale - 1) * e;
+    // とぶ前と、ついたときは ぐっと ちぢみ、空中では のびる
+    var sy = 1 + .14 * Math.sin(Math.PI * e) - .2 * (Math.exp(-e * 14) + Math.exp(-(1 - e) * 14));
+    var sx = 2 - sy;
     frames.push({
-      transform: `translate(${f1(dx)}px,${f1(dy)}px) translate(-50%,-100%) scale(${sc.toFixed(2)})`,
-      opacity: fade && i === 10 ? 0 : 1
+      transform: `translate(${f1(dx)}px,${f1(dy)}px) translate(-50%,-100%) scale(${(sc * sx).toFixed(3)},${(sc * sy).toFixed(3)})`,
+      opacity: fade && i === N ? 0 : 1
     });
   }
   return el.animate(frames, {
@@ -3135,15 +3419,56 @@ function hop(el, x0, y0, x1, y1, {
     fill: 'forwards'
   });
 }
+// よちよち あるく（x0,y0 から x1,y1 へ）
+function waddle(el, x0, y0, x1, y1, sc, dur) {
+  var frames = [];
+  var N = Math.max(8, Math.round(dur / 110));
+  for (var i = 0; i <= N; i++) {
+    var e = i / N,
+      side = i % 2 ? 1 : -1;
+    frames.push({
+      transform: `translate(${f1(x1 * e + x0 * (1 - e))}px,${f1(y1 * e + y0 * (1 - e) - (i % 2 ? 0 : G.carH * .035))}px) translate(-50%,-100%) scale(${sc}) rotate(${i === N ? 0 : side * 7}deg)`
+    });
+  }
+  return el.animate(frames, {
+    duration: dur,
+    easing: 'linear',
+    fill: 'forwards'
+  });
+}
+// 電車が来たら、待っている おきゃくさんが よろこぶ
+function cheerWaiting() {
+  waiting.forEach((a, k) => setTimeout(() => {
+    if (waiting.indexOf(a) < 0) return;
+    a.el.classList.remove('idle');
+    anim(a.el, [{
+      transform: 'translate(-50%,-100%) scale(1,1)'
+    }, {
+      transform: 'translate(-50%,-100%) scale(1.15,.82)',
+      offset: .15
+    }, {
+      transform: 'translate(-50%,-145%) scale(.92,1.12)',
+      offset: .45
+    }, {
+      transform: 'translate(-50%,-100%) scale(1.12,.86)',
+      offset: .75
+    }, {
+      transform: 'translate(-50%,-100%) scale(1,1)'
+    }], {
+      duration: 650,
+      easing: 'ease-in-out'
+    }).onfinish = () => a.el.classList.add('idle');
+  }, k * 120));
+}
 function boardOne(a) {
   waiting.splice(waiting.indexOf(a), 1);
   var doors = visibleDoors(stTrain);
   var d = doors.reduce((m, o) => Math.abs(o.x - a.x) < Math.abs(m.x - a.x) ? o : m, doors[0]);
   sfx.pop();
   hop(a.el, a.x, feetY(), d.x, d.y, {
-    arc: G.carH * .35,
-    dur: 900,
-    endScale: .75,
+    arc: G.carH * .4,
+    dur: 850,
+    endScale: .72,
     fade: true
   }).onfinish = () => a.el.remove();
   if (Math.random() < .35) popXY(a.x, feetY() - paxSize() * 1.1, pick(['💕', '✨', '🎵']), paxSize() * .5);
@@ -3165,31 +3490,32 @@ function alight(tr) {
       hop(el, d.x, d.y, x1, feetY(), {
         arc: G.carH * .3,
         dur: 700,
-        endScale: 1.15
+        endScale: 1.18
       }).onfinish = () => {
-        // ちかいほうの はしへ あるいていく
+        // ちかいほうの はしへ、よちよち あるいていく
         var side = x1 < G.W / 2 ? -1 : 1,
           x2 = side < 0 ? -paxSize() : G.W + paxSize();
-        var frames = [];
-        for (var i = 0; i <= 12; i++) frames.push({
-          transform: `translate(${f1(x1 - d.x + (x2 - x1) * i / 12)}px,${f1(feetY() - d.y - (i % 2 ? G.carH * .04 : 0))}px) translate(-50%,-100%) scale(1.15)`
-        });
-        el.animate(frames, {
-          duration: Math.abs(x2 - x1) / G.carH * 900,
-          easing: 'linear',
-          fill: 'forwards'
-        }).onfinish = () => el.remove();
+        waddle(el, x1 - d.x, feetY() - d.y, x2 - d.x, feetY() - d.y, 1.18, Math.abs(x2 - x1) / G.carH * 1100).onfinish = () => el.remove();
       };
-    }, k * 350);
+    }, k * 380);
   };
   for (var k = 0; k < n; k++) {
     _loop5();
   }
   return n;
 }
-// 発車ベル（オリジナルの短いメロディ）と、車掌さんの笛
+// 発車ベル（オリジナルの短いメロディ）と、車掌さんの笛。ファイルがないときは、その場で作る
 function departBell() {
   if (!ac) return;
+  if (play('depart', {
+    vol: .55
+  })) {
+    play('whistle', {
+      vol: .4,
+      at: 2.85
+    });
+    return;
+  }
   var t0 = ac.currentTime + .02;
   var NOTES = [784, 1047, 1319, 1568, 1319, 1047, 1175, 784, 1047, 1319, 1568, 2093];
   NOTES.forEach((f, i) => {
@@ -3225,9 +3551,23 @@ function departBell() {
   o.stop(t + .8);
   lfo.stop(t + .8);
 }
-// ドアの開け閉め（ぷしゅー と、ピンポン）
+// ドアの開け閉め（ピンポーン、ぷしゅー、とん）
 function doorSound(open) {
   if (!ac) return;
+  if (SND.buf.chime && SND.buf.door_open) {
+    if (open) {
+      play('chime', {
+        vol: .4
+      });
+      play('door_open', {
+        vol: .5,
+        at: .25
+      });
+    } else play('door_close', {
+      vol: .55
+    });
+    return;
+  }
   var t = ac.currentTime + .01;
   hiss(t, .7, 2400, .06, .6);
   [0, .45].forEach((s, k) => {
@@ -3247,7 +3587,7 @@ function stationRound() {
 } // ---------- でんしゃずかん ----------
 function _stationRound() {
   _stationRound = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
-    var my, t, n, tr, k, stopX, onStop, stopped, halted, gone, btn, bw, top0, wide, bottom0;
+    var my, t, n, tr, k, stopX, onStop, stopped, halted, squealed, gone, btn, bw, top0, wide, bottom0;
     return _regenerator().w(function (_context7) {
       while (1) switch (_context7.n) {
         case 0:
@@ -3278,12 +3618,19 @@ function _stationRound() {
             onStop = res;
           });
           halted = false;
+          squealed = false;
           tr.move = (o, dt) => {
             if (halted) {
               o.v = 0;
               return o.x;
             }
-            o.v = Math.min(o.speed, Math.max(o.h * .25, Math.sqrt(2 * o.acc * Math.max(0, o.x - stopX))));
+            o.v = Math.min(o.speed, Math.max(o.h * .18, Math.sqrt(2 * o.acc * Math.max(0, o.x - stopX))));
+            if (!squealed && o.v < o.speed * .35) {
+              squealed = true;
+              play('squeal', {
+                vol: .18
+              });
+            }
             var nx = o.x - o.v * dt;
             if (nx <= stopX) {
               halted = true;
@@ -3294,11 +3641,15 @@ function _stationRound() {
             return nx;
           };
           tr.onTap = () => stationPoke('train');
+          startMotor(tr);
           gone = runTrain(tr, {
             onEnter: () => {
               if (t.deco === 'ghost') ghostSound();else trainHorn(.5);
             }
           });
+          setTimeout(() => {
+            if (my === flow) cheerWaiting();
+          }, 1200);
           _context7.n = 3;
           return stopped;
         case 3:
@@ -3308,14 +3659,13 @@ function _stationRound() {
           }
           return _context7.a(2);
         case 4:
-          if (ac) hiss(ac.currentTime + .05, 1.4, 2600, .07, .5);
-          if (!seen.has(t.id)) {
-            seen.add(t.id);
-            saveSeen();
-          }
-          // ドアを あける
+          settle(tr);
+          if (ac && !play('air', {
+            vol: .45,
+            at: .5
+          })) hiss(ac.currentTime + .5, 1.4, 2600, .07, .5);
           _context7.n = 5;
-          return waitStation('open', P.arrive, () => doorHint(tr, true));
+          return wait(900);
         case 5:
           if (!(my !== flow)) {
             _context7.n = 6;
@@ -3323,11 +3673,13 @@ function _stationRound() {
           }
           return _context7.a(2);
         case 6:
-          doorHint(tr, false);
-          tr.el.classList.add('open');
-          doorSound(true);
+          if (!seen.has(t.id)) {
+            seen.add(t.id);
+            saveSeen();
+          }
+          // ドアを あける
           _context7.n = 7;
-          return wait(900);
+          return waitStation('open', P.arrive, () => doorHint(tr, true));
         case 7:
           if (!(my !== flow)) {
             _context7.n = 8;
@@ -3335,13 +3687,11 @@ function _stationRound() {
           }
           return _context7.a(2);
         case 8:
-          if (!alight(tr)) {
-            _context7.n = 9;
-            break;
-          }
-          say(P.oriru);
+          doorHint(tr, false);
+          tr.el.classList.add('open');
+          doorSound(true);
           _context7.n = 9;
-          return wait(2600);
+          return wait(900);
         case 9:
           if (!(my !== flow)) {
             _context7.n = 10;
@@ -3349,6 +3699,20 @@ function _stationRound() {
           }
           return _context7.a(2);
         case 10:
+          if (!alight(tr)) {
+            _context7.n = 11;
+            break;
+          }
+          say(P.oriru);
+          _context7.n = 11;
+          return wait(2600);
+        case 11:
+          if (!(my !== flow)) {
+            _context7.n = 12;
+            break;
+          }
+          return _context7.a(2);
+        case 12:
           // ときどき、奥の線路を とっきゅうが 通過する
           if (Math.random() < .35) setTimeout(() => {
             if (my !== flow) return;
@@ -3357,17 +3721,8 @@ function _stationRound() {
               speed: 2.4
             }));
           }, 2500);
-          _context7.n = 11;
-          return waitStation('board', P.board, () => waiting.forEach((a, i) => setTimeout(() => bounce(a.el), i * 150)));
-        case 11:
-          if (!(my !== flow)) {
-            _context7.n = 12;
-            break;
-          }
-          return _context7.a(2);
-        case 12:
           _context7.n = 13;
-          return waitStation('close', P.close, () => doorHint(tr, true));
+          return waitStation('board', P.board, () => waiting.forEach((a, i) => setTimeout(() => bounce(a.el), i * 150)));
         case 13:
           if (!(my !== flow)) {
             _context7.n = 14;
@@ -3375,12 +3730,8 @@ function _stationRound() {
           }
           return _context7.a(2);
         case 14:
-          doorHint(tr, false);
-          tr.el.classList.remove('open');
-          doorSound(false);
-          say(P.closing);
           _context7.n = 15;
-          return wait(1400);
+          return waitStation('close', P.close, () => doorHint(tr, true));
         case 15:
           if (!(my !== flow)) {
             _context7.n = 16;
@@ -3388,6 +3739,43 @@ function _stationRound() {
           }
           return _context7.a(2);
         case 16:
+          doorHint(tr, false);
+          // ピンポーン、「ドアが しまりまーす」、それから しまる
+          if (!play('chime', {
+            vol: .4
+          })) doorSound(false);
+          _context7.n = 17;
+          return say(P.closing);
+        case 17:
+          if (!(my !== flow)) {
+            _context7.n = 18;
+            break;
+          }
+          return _context7.a(2);
+        case 18:
+          tr.el.classList.remove('open');
+          if (SND.buf.door_close) doorSound(false);
+          setTimeout(() => {
+            if (my === flow) tr.boxes.forEach(b => anim(b.firstChild, [{
+              transform: 'translateY(0)'
+            }, {
+              transform: 'translateY(.8%)',
+              offset: .3
+            }, {
+              transform: 'translateY(0)'
+            }], {
+              duration: 300
+            }));
+          }, 780);
+          _context7.n = 19;
+          return wait(1300);
+        case 19:
+          if (!(my !== flow)) {
+            _context7.n = 20;
+            break;
+          }
+          return _context7.a(2);
+        case 20:
           // 発車ベルの ボタン
           btn = $('#goBtn');
           btn.hidden = false;
@@ -3396,39 +3784,40 @@ function _stationRound() {
           wide = G.W > G.H * 1.3, bottom0 = wide ? G.H - 16 : G.H - 84;
           btn.style.left = `${f1(wide ? Math.max(24, G.W * .06) : (G.W - bw) / 2)}px`;
           btn.style.top = `${f1(Math.max(top0, (top0 + bottom0 - bw) / 2))}px`;
-          _context7.n = 17;
+          _context7.n = 21;
           return waitStation('go', P.pushGo);
-        case 17:
+        case 21:
           btn.hidden = true;
           if (!(my !== flow)) {
-            _context7.n = 18;
+            _context7.n = 22;
             break;
           }
           return _context7.a(2);
-        case 18:
+        case 22:
           departBell();
-          _context7.n = 19;
-          return wait(3300);
-        case 19:
+          _context7.n = 23;
+          return wait(3900);
+        case 23:
           if (!(my !== flow)) {
-            _context7.n = 20;
+            _context7.n = 24;
             break;
           }
           return _context7.a(2);
-        case 20:
+        case 24:
           say(P.shinko);
           trainHorn(.8);
+          // ゆっくり動きだして、だんだん はやくなる
           tr.move = (o, dt) => {
-            o.v = Math.min(o.speed * 1.3, o.v + o.speed * .45 * dt);
+            o.v = Math.min(o.speed * 1.3, o.v + o.speed * (.45 + .35 * Math.min(1, o.v / o.speed)) * dt);
             return o.x - o.v * dt;
           };
-          _context7.n = 21;
+          _context7.n = 25;
           return wait(1800);
-        case 21:
+        case 25:
           if (my === flow) say(P.bye2);
-          _context7.n = 22;
+          _context7.n = 26;
           return gone;
-        case 22:
+        case 26:
           return _context7.a(2);
       }
     }, _callee7);
@@ -3450,11 +3839,10 @@ function goZukan(back) {
     var c = document.createElement('button');
     c.className = 'zcard' + (has ? '' : ' locked');
     c.setAttribute('aria-label', has ? t.name : 'まだ あっていない でんしゃ');
-    c.innerHTML = `<div class="mini"><div class="carbox">${carSVG(t, 1, 2, 1, {
+    c.innerHTML = `<div class="mini"></div><div class="name">${has ? t.name : '？'}</div>`;
+    [1, 0].forEach(i => c.firstChild.appendChild(buildCar(t, i, 2, 1, 64, {
       quiet: true
-    })}</div><div class="carbox">${carSVG(t, 0, 2, 1, {
-      quiet: true
-    })}</div></div><div class="name">${has ? t.name : '？'}</div>`;
+    })));
     c.addEventListener('click', () => {
       if (!has) {
         sfx.tap();
@@ -3653,7 +4041,7 @@ window.voiceLines = function () {
     var k = clipKey(t);
     if (!out[k]) out[k] = {
       key: k,
-      text: t.replace(/[\s　「」]/g, '').replace(/〜/g, 'ー'),
+      text: (READ[t] || t).replace(/[\s　「」]/g, '').replace(/〜/g, 'ー'),
       style: 'るんるん'
     };
   };
@@ -3663,7 +4051,7 @@ window.voiceLines = function () {
   COUNT.forEach(c => add(`${c}！`));
   RYO.forEach(c => add(`${c}！`));
   PRAISE.forEach(p => add(p[1]));
-  for (var n = 2; n <= ROUNDS; n++) add(streakLine(n));
+  for (var _n = 2; _n <= ROUNDS; _n++) add(streakLine(_n));
   return Object.keys(out).map(k => out[k]);
 };
 
