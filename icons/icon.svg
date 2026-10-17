@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- ふみきり カンカン のアイコン（tools/make_icons.js で png にする） -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd0ff"/><stop offset="1" stop-color="#e8f7ff"/></linearGradient>
+    <linearGradient id="m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#84262d"/><stop offset="1" stop-color="#52121a"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#sky)"/>
+  <rect y="360" width="512" height="152" fill="#8fd47a"/>
+  <!-- マルーンの電車 -->
+  <rect x="-20" y="250" width="560" height="120" rx="10" fill="url(#m)"/>
+  <rect x="-20" y="250" width="560" height="16" fill="#efe6cc"/>
+  <g fill="#cfe0ec" stroke="#d7dbe0" stroke-width="5">
+    <rect x="20" y="284" width="56" height="46" rx="5"/><rect x="96" y="284" width="56" height="46" rx="5"/>
+    <rect x="360" y="284" width="56" height="46" rx="5"/><rect x="436" y="284" width="56" height="46" rx="5"/>
+  </g>
+  <rect x="0" y="370" width="512" height="16" fill="#7c7f85"/>
+  <!-- 警報機 -->
+  <rect x="244" y="150" width="24" height="362" fill="#e3e3e3"/>
+  <g fill="#ffd200" stroke="#222" stroke-width="6">
+    <rect x="96" y="96" width="320" height="52" rx="6" transform="rotate(30 256 122)"/>
+    <rect x="96" y="96" width="320" height="52" rx="6" transform="rotate(-30 256 122)"/>
+  </g>
+  <g fill="#222">
+    <rect x="150" y="96" width="34" height="52" transform="rotate(30 256 122)"/><rect x="236" y="96" width="40" height="52" transform="rotate(30 256 122)"/><rect x="328" y="96" width="34" height="52" transform="rotate(30 256 122)"/>
+    <rect x="150" y="96" width="34" height="52" transform="rotate(-30 256 122)"/><rect x="328" y="96" width="34" height="52" transform="rotate(-30 256 122)"/>
+  </g>
+  <rect x="96" y="196" width="320" height="128" rx="64" fill="#1d1d1f"/>
+  <circle cx="170" cy="260" r="78" fill="#ff5a36" opacity=".45"/>
+  <circle cx="170" cy="260" r="46" fill="#ff3418"/>
+  <circle cx="342" cy="260" r="46" fill="#4d1510"/>
+  <g fill="#222"><rect x="244" y="420" width="24" height="30"/><rect x="244" y="480" width="24" height="32"/></g>
+  <g fill="#ffd200"><rect x="244" y="390" width="24" height="30"/><rect x="244" y="450" width="24" height="30"/></g>
+</svg>

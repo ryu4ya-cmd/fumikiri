@@ -1,0 +1,16 @@
+{
+  "name": "ふみきり カンカン",
+  "short_name": "ふみきり",
+  "description": "ふみきりをカンカン鳴らして、マルーン色の電車を通す、幼児向けの電車あそび",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#8fd0ff",
+  "theme_color": "#8fd0ff",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

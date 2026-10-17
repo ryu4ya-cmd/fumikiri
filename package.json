@@ -1,0 +1,13 @@
+{
+  "name": "fumikiri",
+  "private": true,
+  "description": "ふみきり カンカン（幼児向けの電車あそび）",
+  "scripts": {
+    "build": "node tools/build.js"
+  },
+  "devDependencies": {
+    "@babel/core": "7.24.7",
+    "@babel/preset-env": "7.24.7",
+    "jsdom": "^24.1.0"
+  }
+}
