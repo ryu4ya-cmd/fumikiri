@@ -53,7 +53,11 @@
   #farTrains { z-index: 3; }
   #wires { z-index: 4; }
   #nearTrains { z-index: 5; }
+  #platform { z-index: 6; display: none; }
+  #people { z-index: 7; display: none; }
   #xingLayer { z-index: 6; }
+  .station #platform, .station #people { display: block; }
+  .station #xingLayer, .station #frontTraffic, .station #backTraffic { display: none; }
   #frontTraffic { z-index: 7; }
   .cloud { position: absolute; animation: drift 60s linear infinite; opacity: .95; }
   @keyframes drift { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
@@ -149,6 +153,38 @@
   .big-btn .label { font-size: 2.9vmin; font-size: clamp(11px, 2.9vmin, 22px); font-weight: 900; white-space: nowrap; }
   .big-btn.free { border: 6px solid #ef5a3c; }
   .big-btn.count { border: 6px solid #64b5f6; }
+  .big-btn.station { border: 6px solid #43a36b; }
+
+  /* ---------- 駅 ---------- */
+  /* ひらく扉（2まいの扉が、左右の かべの中へ）。うしろは車内の色 */
+  .door { position: absolute; overflow: hidden; background: linear-gradient(#f3ead4, #cdbf9f); }
+  .door i { position: absolute; top: 0; bottom: 0; width: 50%; background: var(--dc, #5e161c); box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); transition: transform .7s ease-in-out; }
+  .door i:first-child { left: 0; }
+  .door i + i { right: 0; }
+  .door i::after { content: ""; position: absolute; left: 16%; right: 16%; top: 7%; height: 44%; background: linear-gradient(#d6e6f1, #8fa8bb); border: 2px solid #d3d8de; border-radius: 2px; }
+  .open .door i:first-child { transform: translateX(-100%); }
+  .open .door i + i { transform: translateX(100%); }
+  .door.hint { animation: doorHint 1s ease-in-out infinite; }
+  @keyframes doorHint { 50% { box-shadow: 0 0 0 4px #fff59d, 0 0 18px 8px #ffe082; } }
+  .pax { position: absolute; line-height: 1; transform: translate(-50%,-100%); pointer-events: auto; cursor: pointer; will-change: transform; }
+  .pax.off { pointer-events: none; }
+  /* 駅名標（となりの駅も書いてある） */
+  .ekimei { display: flex; flex-direction: column; align-items: center; min-width: 0; background: #fff; border-radius: 10px; padding: 4px 18px 0; box-shadow: 0 4px 0 rgba(0,0,0,.12); border-bottom: 8px solid var(--maroon); }
+  .ekimei b { font-size: 5vmin; font-size: clamp(18px, 5vmin, 34px); font-weight: 900; letter-spacing: .08em; white-space: nowrap; }
+  .ekimei span { display: flex; justify-content: space-between; gap: 18px; width: 100%; font-size: 2.4vmin; font-size: clamp(10px, 2.4vmin, 15px); font-weight: 700; color: #6d6058; white-space: nowrap; padding-bottom: 2px; }
+  .ekimei i { font-style: normal; }
+  .go-btn {
+    position: absolute;
+    width: 22vmin; width: clamp(96px, 22vmin, 160px); height: 22vmin; height: clamp(96px, 22vmin, 160px); border-radius: 50%;
+    background: #ef5a3c; color: #fff; box-shadow: 0 9px 0 #b8381f, 0 14px 24px rgba(0,0,0,.2);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .go-btn:active { transform: translateY(6px); box-shadow: 0 3px 0 #b8381f; }
+  .go-btn span { font-size: 9vmin; font-size: clamp(38px, 9vmin, 66px); line-height: 1; }
+  .go-btn b { font-size: 3vmin; font-size: clamp(13px, 3vmin, 20px); font-weight: 900; }
+  .nogap .ekimei span > * + * { margin-left: 18px; }
+  .nogap .go-btn > * + * { margin-top: 2px; }
   .big-btn.book { border: 6px solid #8d6e63; }
 
   /* ---------- 上のバー ---------- */
@@ -276,6 +312,7 @@
     <linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6e6f1"/><stop offset="1" stop-color="#8fa8bb"/></linearGradient>
     <linearGradient id="gGhostGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3edff"/><stop offset="1" stop-color="#c3b0ff"/></linearGradient>
     <linearGradient id="gGrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4e69a"/><stop offset="1" stop-color="#78c866"/></linearGradient>
+    <linearGradient id="gPlat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9d4ca"/><stop offset="1" stop-color="#bdb6aa"/></linearGradient>
     <linearGradient id="gRoad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a3a5aa"/><stop offset="1" stop-color="#85878d"/></linearGradient>
   </defs>
 </svg>
@@ -287,6 +324,8 @@
   <div class="layer" id="farTrains"></div>
   <svg class="layer" id="wires" aria-hidden="true"></svg>
   <div class="layer" id="nearTrains"></div>
+  <svg class="layer" id="platform" aria-hidden="true"></svg>
+  <div class="layer" id="people"></div>
   <div class="layer" id="xingLayer"></div>
   <div class="layer" id="frontTraffic"></div>
 </div>
@@ -306,20 +345,23 @@
   <h1 class="title">ふみきり <span class="kan">カンカン</span></h1>
   <div class="menu">
     <button class="big-btn free" data-mode="free"><span class="icon" id="xingIcon"></span><span class="label">ふみきり</span></button>
+    <button class="big-btn station" data-mode="station"><span class="icon">🚉</span><span class="label">しゅっぱつ！</span></button>
     <button class="big-btn count" data-mode="count"><span class="icon">🔢</span><span class="label">なんりょう？</span></button>
     <button class="big-btn book" data-mode="zukan"><span class="icon">📖</span><span class="label">でんしゃずかん</span></button>
   </div>
 </section>
 
-<!-- あそぶ画面（ふみきり・なんりょう？で共通） -->
+<!-- あそぶ画面（ふみきり・しゅっぱつ・なんりょう？で共通） -->
 <section id="play" class="screen">
   <div class="topbar">
     <button class="round-btn" data-home aria-label="おうちにもどる">🏠</button>
     <div class="progress" id="progress" hidden></div>
+    <div class="ekimei" id="ekimei" hidden><b>どうぶつえんまえ</b><span><i>← もりのなか</i><i>うみのそば →</i></span></div>
     <button class="pill" id="seenPill" aria-label="でんしゃずかん" hidden><span aria-hidden="true">🚃</span><span id="seenCount">0 / 7</span></button>
     <button class="round-btn" id="askAgain" aria-label="もういちど きく">👂</button>
   </div>
   <div class="choices" id="choices" hidden></div>
+  <button class="go-btn" id="goBtn" hidden aria-label="しゅっぱつ"><span aria-hidden="true">🔔</span><b>しゅっぱつ</b></button>
 </section>
 
 <!-- でんしゃずかん -->
@@ -445,13 +487,13 @@
   // 色は阪急電車のイメージ（マルーンの車体、アイボリーの屋根のふち、銀色の窓わく）。
   // speed は1秒に進む車両の数。label は窓のところの行き先表示（種別）
   const TRAINS = [
-    { id: 'futsu', name: 'ふつう', label: '普通', led: '#ffffff', cars: 5, speed: 1.2, w: 4, line: 'ふつうの　でんしゃ！' },
-    { id: 'kyuko', name: 'きゅうこう', label: '急行', led: '#ffa21f', cars: 6, speed: 1.5, w: 3, line: 'きゅうこう　だよ！' },
-    { id: 'tokkyu', name: 'とっきゅう', label: '特急', led: '#ff4030', cars: 6, speed: 2.0, w: 3, line: 'とっきゅう！　はやーい！' },
+    { id: 'futsu', name: 'ふつう', label: '普通', led: '#ffffff', cars: 5, speed: 1.2, w: 4, ann: 'ふつう　でんしゃ', line: 'ふつうの　でんしゃ！' },
+    { id: 'kyuko', name: 'きゅうこう', label: '急行', led: '#ffa21f', cars: 6, speed: 1.5, w: 3, ann: 'きゅうこう', line: 'きゅうこう　だよ！' },
+    { id: 'tokkyu', name: 'とっきゅう', label: '特急', led: '#ff4030', cars: 6, speed: 2.0, w: 3, ann: 'とっきゅう', line: 'とっきゅう！　はやーい！' },
     { id: 'nagai', name: 'ながーい でんしゃ', label: '普通', led: '#ffffff', cars: 10, speed: 1.7, w: 1.5, line: 'ながーい　でんしゃ！' },
-    { id: 'hana', name: 'はなの でんしゃ', label: '急行', led: '#ffa21f', cars: 5, speed: 1.1, w: 1.5, deco: 'flower', line: 'はなの　でんしゃ！　きれいだね！' },
-    { id: 'doubutsu', name: 'どうぶつ でんしゃ', label: '普通', led: '#ffffff', cars: 5, speed: 1.0, w: 1.5, deco: 'animal', line: 'どうぶつ　でんしゃ！　みんな　のってるね！' },
-    { id: 'obake', name: 'おばけ でんしゃ', label: 'おばけ', led: '#c9a2ff', cars: 4, speed: 0.95, w: 1, deco: 'ghost', line: 'おばけ　でんしゃだー！' },
+    { id: 'hana', name: 'はなの でんしゃ', label: '急行', led: '#ffa21f', cars: 5, speed: 1.1, w: 1.5, deco: 'flower', ann: 'はなの　でんしゃ', line: 'はなの　でんしゃ！　きれいだね！' },
+    { id: 'doubutsu', name: 'どうぶつ でんしゃ', label: '普通', led: '#ffffff', cars: 5, speed: 1.0, w: 1.5, deco: 'animal', ann: 'どうぶつ　でんしゃ', line: 'どうぶつ　でんしゃ！　みんな　のってるね！' },
+    { id: 'obake', name: 'おばけ でんしゃ', label: 'おばけ', led: '#c9a2ff', cars: 4, speed: 0.95, w: 1, deco: 'ghost', ann: 'おばけ　でんしゃ', line: 'おばけ　でんしゃだー！' },
   ];
   const TRAIN = {};
   TRAINS.forEach(t => { TRAIN[t.id] = t; });
@@ -1099,6 +1141,7 @@
     }
     // 地面
     s += `<rect x="0" y="${horizonY}" width="${W}" height="${H - horizonY}" fill="url(#gGrass)"/>`;
+    if (!G.station) {
     // 道（奥から手前へ）
     const hwTop = roadHalf(horizonY), hwBot = roadHalf(H);
     s += `<path d="M${f1(cx - hwTop)} ${horizonY} L${f1(cx + hwTop)} ${horizonY} L${f1(cx + hwBot)} ${H} L${f1(cx - hwBot)} ${H} Z" fill="url(#gRoad)"/>`;
@@ -1108,6 +1151,7 @@
     // 停止線（線路の手前と奥）
     const stopLine = (y, from, to) => `<path d="M${f1(cx + from * roadHalf(y) * .92)} ${f1(y)} L${f1(cx + to * roadHalf(y) * .92)} ${f1(y)}" stroke="#fff" stroke-width="${f1(carH * .045)}"/>`;
     s += stopLine(G.stopNear + carH * .03, -1, 0) + stopLine(G.stopFar - carH * .08, 0, 1);
+    }
     // 線路（奥と手前）
     const track = (rail, k) => {
       let t = '';
@@ -1115,12 +1159,12 @@
       t += `<rect x="0" y="${f1(rail)}" width="${W}" height="${f1(bh)}" fill="#aaa397"/>`;
       t += `<rect x="0" y="${f1(rail + bh)}" width="${W}" height="${f1(carH * .02 * k)}" fill="#8f897d"/>`;
       // 道と重なるところは、踏切の板
-      const hw = roadHalf(rail + bh / 2) * .98;
-      t += `<rect x="${f1(cx - hw)}" y="${f1(rail)}" width="${f1(hw * 2)}" height="${f1(bh)}" fill="#6a6c71"/>`;
+      const hw = G.station ? 0 : roadHalf(rail + bh / 2) * .98;
+      if (hw) t += `<rect x="${f1(cx - hw)}" y="${f1(rail)}" width="${f1(hw * 2)}" height="${f1(bh)}" fill="#6a6c71"/>`;
       // まくら木
       const step = carH * .24 * k;
       for (let sx = (cx % step) - step; sx < W; sx += step) {
-        if (Math.abs(sx - cx) < hw) continue;
+        if (Math.abs(sx - cx) < hw + step * .4 && hw) continue;
         t += `<rect x="${f1(sx)}" y="${f1(rail + bh * .15)}" width="${f1(step * .38)}" height="${f1(bh * .4)}" fill="#7d6a55"/>`;
       }
       // レール
@@ -1148,6 +1192,30 @@
     poles.forEach(px => { w += `<rect x="${f1(px - carH * .03)}" y="${f1(G.nearWire - carH * .14)}" width="${f1(carH * .32)}" height="${f1(carH * .03)}" fill="#8e949b"/>`; });
     $('#wires').setAttribute('viewBox', `0 0 ${W} ${H}`);
     $('#wires').innerHTML = w;
+    renderPlatform();
+  }
+  // 駅のホーム（手前の線路の、こちらがわ）。電車の車輪は、ホームにかくれる
+  function renderPlatform() {
+    const { W, H, carH } = G;
+    const y = G.platY = G.nearRail - carH * .13;
+    let s = `<rect x="0" y="${f1(y)}" width="${W}" height="${f1(H - y)}" fill="url(#gPlat)"/>`;
+    s += `<rect x="0" y="${f1(y)}" width="${W}" height="${f1(carH * .025)}" fill="#8d887e"/>`;
+    s += `<rect x="0" y="${f1(y + carH * .07)}" width="${W}" height="${f1(carH * .014)}" fill="#fff"/>`;
+    // 点字ブロック
+    const ty = y + carH * .13, th = carH * .08, dot = th / 4;
+    s += `<rect x="0" y="${f1(ty)}" width="${W}" height="${f1(th)}" fill="#ffd23f"/>`;
+    for (let x = dot; x < W; x += dot * 2.6) for (let r = 0; r < 2; r++) s += `<circle cx="${f1(x + r * dot * 1.3)}" cy="${f1(ty + dot * (1.2 + r * 1.6))}" r="${f1(dot * .45)}" fill="#e8b51f"/>`;
+    // ホームの床の目地
+    for (let k = 1; k < 6; k++) { const ly = ty + th + (H - ty - th) * k * k / 36; s += `<rect x="0" y="${f1(ly)}" width="${W}" height="1.5" fill="rgba(0,0,0,.06)"/>`; }
+    $('#platform').setAttribute('viewBox', `0 0 ${W} ${H}`);
+    $('#platform').innerHTML = s;
+  }
+  // 踏切の景色と、駅の景色を切りかえる
+  function setStation(on) {
+    if (!!G.station === on) return;
+    G.station = on;
+    $('#world').classList.toggle('station', on);
+    layout();
   }
   // 架線（ちょうか線と、トロリ線。あいだを細い線でつなぐ）
   function catenary(y, k) {
@@ -1299,7 +1367,7 @@
     });
     const len = n * w + (n - 1) * gap;
     el.style.top = `${f1((near ? G.nearRail : G.farRail) - h)}px`;
-    const tr = { t, dir, near, el, h, w, gap, len, n, boxes, order, speed: (speed || t.speed) * w, x: dir > 0 ? -len - 8 : G.W + 8, sides: [], passed: [], flow };
+    const tr = { t, dir, near, el, h, w, gap, len, n, boxes, order, speed: (speed || t.speed) * w, v: (speed || t.speed) * w, x: dir > 0 ? -len - 8 : G.W + 8, sides: [], passed: [], flow };
     tr.el.style.transform = `translate3d(${f1(tr.x)}px,0,0)`;
     onPress(el, () => trainTap(tr));
     return tr;
@@ -1323,7 +1391,8 @@
   }
   function stepTrain(tr, dt) {
     if (tr.flow !== flow) { endTrain(tr); return; }
-    tr.x += tr.dir * tr.speed * dt;
+    if (tr.move) tr.x = tr.move(tr, dt);
+    else { tr.v = tr.speed; tr.x += tr.dir * tr.speed * dt; }
     tr.el.style.transform = `translate3d(${f1(tr.x)}px,0,0)`;
     if (!tr.entered && (tr.dir > 0 ? tr.x + tr.len > 0 : tr.x < G.W)) { tr.entered = true; if (tr.onEnter) tr.onEnter(tr); }
     // 車輪が踏切のところのつなぎ目を通ったら「ガタン」
@@ -1346,6 +1415,7 @@
   let lastTap = 0;
   // 走っている電車をさわると、警笛を鳴らして、お客さんが手をふる
   function trainTap(tr) {
+    if (tr.onTap) { tr.onTap(); return; }
     const now = Date.now();
     if (now - lastTap < 700) return;
     lastTap = now;
@@ -1594,7 +1664,7 @@
     let rum = 0;
     running.forEach(tr => {
       const vis = Math.max(0, Math.min(tr.x + tr.len, G.W) - Math.max(tr.x, 0)) / G.W;
-      rum += vis * (tr.near ? .07 : .045);
+      rum += vis * (tr.near ? .07 : .045) * (tr.v === undefined ? 1 : tr.v / tr.speed);
     });
     setRumble(Math.min(.1, rum));
     if (running.length || vehicles.length) requestAnimationFrame(frame);
@@ -1625,6 +1695,15 @@
     countAsk: 'なんりょう　だった？',
     thisWay: 'こっちだよー。',
     countFinale: 'ぜんぶ　できたね！　かぞえる　めいじん！',
+    stationHello: 'えきで　でんしゃを　まとう！',
+    arrive: 'とうちゃーく！　ドアを　あけてね！',
+    oriru: 'おりる　おきゃくさんが　さきだよ。',
+    board: 'おきゃくさんを　のせてあげよう！',
+    close: 'みんな　のったね！　ドアを　しめてね！',
+    closing: 'ドアが　しまりまーす。',
+    pushGo: 'しゅっぱつの　ボタンを　おしてね！',
+    shinko: 'しゅっぱつ　しんこう！',
+    passing: 'とっきゅうが　とおりまーす！',
     zukanHello: 'でんしゃずかん　だよ！',
     zukanAll: 'ぜんぶの　でんしゃに　あえたね！　すごい！',
     notYet: 'まだ　あって　いない　でんしゃだよ。',
@@ -1657,6 +1736,13 @@
     $('#choices').innerHTML = '';
     clearTimeout(idleTimer);
     trafficOn = false;
+    if (stWait) clearTimeout(stWait.timer);
+    stWait = null;
+    stTrain = null;
+    waiting = [];
+    $('#people').innerHTML = '';
+    $('#goBtn').hidden = true;
+    setStation(false);
     document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
     BGM.start();
   }
@@ -1671,8 +1757,9 @@
     trafficOn = true;
     renderBgmBtn();
   }
-  function setTop({ progress = false, pill = false, ask = false } = {}) {
+  function setTop({ progress = false, pill = false, ask = false, sign = false } = {}) {
     $('#progress').hidden = !progress;
+    $('#ekimei').hidden = !sign;
     $('#seenPill').hidden = !pill;
     $('#askAgain').classList.toggle('ghostbtn', !ask);
   }
@@ -1726,6 +1813,7 @@
   }
   function worldTap() {
     if (mode === 'free') freeRun();
+    else if (mode === 'station') stationPoke('world');
   }
   async function freeRun() {
     if (busy) return;
@@ -1878,6 +1966,260 @@
     delete box.dataset.done;
   }
 
+  // ---------- ② しゅっぱつ しんこう（えきで、おきゃくさんを のせて出発する） ----------
+  // 電車が止まる → ドアをあける → おりる → のせる → ドアをしめる → 発車ベル → しゅっぱつ しんこう！
+  const STATION_TRAINS = TRAINS.filter(t => t.id !== 'nagai');
+  let stWait = null;      // いま、子どもに なにをしてほしいか（{ kind, res, timer }）
+  let stTrain = null;     // 駅に止まっている電車
+  let waiting = [];       // ホームで待っている おきゃくさん
+  async function goStation() {
+    show('play');
+    mode = 'station';
+    setStation(true);
+    setTop({ sign: true, ask: true });
+    const my = flow;
+    await say(P.stationHello);
+    while (my === flow) {
+      await stationRound();
+      if (my === flow) await wait(1200);
+    }
+  }
+  // ホームの、足もとの高さ
+  const feetY = () => G.platY + G.carH * .55;
+  const paxSize = () => G.carH * .36;
+  // ホームで待つ おきゃくさん
+  function spawnWaiting() {
+    const layer = $('#people');
+    const n = Math.max(2, Math.min(4, Math.floor(G.W / (G.carH * 1.1))));
+    const animals = shuffle(ANIMALS).slice(0, n);
+    waiting = animals.map((e, k) => {
+      const el = document.createElement('div');
+      el.className = 'pax';
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', 'おきゃくさん');
+      el.textContent = e;
+      const x = G.W * (k + .5) / n + rand(-.06, .06) * G.W / n;
+      el.style.cssText = `left:${f1(x)}px;top:${f1(feetY())}px;font-size:${f1(paxSize())}px`;
+      layer.appendChild(el);
+      anim(el, [{ transform: 'translate(-50%,-100%) translateY(40%) scale(.2)', opacity: 0 }, { transform: 'translate(-50%,-100%) scale(1)', opacity: 1 }], { duration: 500, delay: k * 150, fill: 'backwards' });
+      const a = { el, e, x };
+      onPress(el, () => stationPoke('animal', a));
+      return a;
+    });
+  }
+  // 電車のドアのところに、ひらく扉を重ねる
+  function addDoors(tr) {
+    const ghost = tr.t.deco === 'ghost';
+    tr.boxes.forEach(b => DOORS.forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'door';
+      d.style.cssText = `left:${f1((c - 13) / 3)}%;top:${f1((CAR_T + 10) / 1.4)}%;width:${f1(26 / 3)}%;height:${f1((CAR_B - CAR_T - 11) / 1.4)}%`;
+      if (ghost) d.style.setProperty('--dc', '#e2e6ff');
+      d.innerHTML = '<i></i><i></i>';
+      b.appendChild(d);
+    }));
+  }
+  // 画面に見えているドアの、まん中と床の位置
+  function visibleDoors(tr) {
+    const out = [];
+    tr.boxes.forEach(b => {
+      const r = b.getBoundingClientRect();
+      DOORS.forEach(c => {
+        const x = r.left + c / 300 * r.width;
+        if (x > G.carH * .3 && x < G.W - G.carH * .3) out.push({ x, y: r.top + CAR_B / 140 * r.height });
+      });
+    });
+    return out;
+  }
+  const doorHint = (tr, on) => tr.el.querySelectorAll('.door').forEach(d => d.classList.toggle('hint', on));
+  // 子どもが さわるのを待つ。しばらく さわらないと、もういちど言う
+  function waitStation(kind, line, hint) {
+    const my = flow;
+    return new Promise(res => {
+      stWait = { kind, res };
+      const prompt = () => { say(line); if (hint) hint(); };
+      prompt();
+      askAgain = prompt;
+      const nag = () => { stWait.timer = setTimeout(() => { if (my !== flow || !stWait || stWait.kind !== kind) return; prompt(); nag(); }, 9000); };
+      nag();
+    });
+  }
+  function resolveWait() {
+    const w = stWait;
+    if (!w) return;
+    clearTimeout(w.timer);
+    stWait = null;
+    askAgain = null;
+    w.res();
+  }
+  // さわったとき（電車・景色・おきゃくさん・しゅっぱつボタン）
+  function stationPoke(src, a) {
+    if (!stWait) { if (src === 'train') trainHorn(.4); return; }
+    const k = stWait.kind;
+    if ((k === 'open' || k === 'close') && (src === 'train' || src === 'world')) resolveWait();
+    else if (k === 'board' && src !== 'btn') {
+      // 2歳でも進められるように、景色をさわっても、待っている おきゃくさんが のる
+      const who = src === 'animal' ? a : waiting[0];
+      if (!who || waiting.indexOf(who) < 0) return;
+      boardOne(who);
+      if (!waiting.length) { stWait.kind = 'boarding'; setTimeout(resolveWait, 1000); }
+    } else if (k === 'go' && (src === 'btn' || src === 'train')) resolveWait();
+  }
+  // ぴょんと とんで動く（from → to）。最後に消える
+  function hop(el, x0, y0, x1, y1, { arc = 40, dur = 900, endScale = 1, fade = false } = {}) {
+    const frames = [];
+    for (let i = 0; i <= 10; i++) {
+      const e = i / 10;
+      const dx = (x1 - x0) * e, dy = (y1 - y0) * e - arc * Math.sin(Math.PI * e);
+      const sc = 1 + (endScale - 1) * e;
+      frames.push({ transform: `translate(${f1(dx)}px,${f1(dy)}px) translate(-50%,-100%) scale(${sc.toFixed(2)})`, opacity: fade && i === 10 ? 0 : 1 });
+    }
+    return el.animate(frames, { duration: dur, easing: 'linear', fill: 'forwards' });
+  }
+  function boardOne(a) {
+    waiting.splice(waiting.indexOf(a), 1);
+    const doors = visibleDoors(stTrain);
+    const d = doors.reduce((m, o) => (Math.abs(o.x - a.x) < Math.abs(m.x - a.x) ? o : m), doors[0]);
+    sfx.pop();
+    hop(a.el, a.x, feetY(), d.x, d.y, { arc: G.carH * .35, dur: 900, endScale: .75, fade: true }).onfinish = () => a.el.remove();
+    if (Math.random() < .35) popXY(a.x, feetY() - paxSize() * 1.1, pick(['💕', '✨', '🎵']), paxSize() * .5);
+  }
+  // 電車から おきゃくさんが おりて、ホームを あるいていく
+  function alight(tr) {
+    const doors = shuffle(visibleDoors(tr));
+    const n = Math.min(doors.length, tr.t.deco === 'animal' ? 4 : 1 + Math.floor(Math.random() * 3));
+    const list = tr.t.deco === 'ghost' ? ['👻'] : ANIMALS;
+    for (let k = 0; k < n; k++) {
+      const d = doors[k];
+      const el = document.createElement('div');
+      el.className = 'pax off';
+      el.textContent = pick(list);
+      el.style.cssText = `left:${f1(d.x)}px;top:${f1(d.y)}px;font-size:${f1(paxSize() * .85)}px`;
+      $('#people').appendChild(el);
+      setTimeout(() => {
+        const x1 = d.x + (d.x < G.W / 2 ? -1 : 1) * G.carH * .3;
+        hop(el, d.x, d.y, x1, feetY(), { arc: G.carH * .3, dur: 700, endScale: 1.15 }).onfinish = () => {
+          // ちかいほうの はしへ あるいていく
+          const side = x1 < G.W / 2 ? -1 : 1, x2 = side < 0 ? -paxSize() : G.W + paxSize();
+          const frames = [];
+          for (let i = 0; i <= 12; i++) frames.push({ transform: `translate(${f1(x1 - d.x + (x2 - x1) * i / 12)}px,${f1(feetY() - d.y - (i % 2 ? G.carH * .04 : 0))}px) translate(-50%,-100%) scale(1.15)` });
+          el.animate(frames, { duration: Math.abs(x2 - x1) / G.carH * 900, easing: 'linear', fill: 'forwards' }).onfinish = () => el.remove();
+        };
+      }, k * 350);
+    }
+    return n;
+  }
+  // 発車ベル（オリジナルの短いメロディ）と、車掌さんの笛
+  function departBell() {
+    if (!ac) return;
+    const t0 = ac.currentTime + .02;
+    const NOTES = [784, 1047, 1319, 1568, 1319, 1047, 1175, 784, 1047, 1319, 1568, 2093];
+    NOTES.forEach((f, i) => {
+      const t = t0 + i * .19, d = i === NOTES.length - 1 ? .9 : .5;
+      ding(t, f, d, { type: 'sine', vol: .1 });
+      ding(t, f * 2, d * .4, { type: 'sine', vol: .025 });
+    });
+    // ぴーっ
+    const t = t0 + NOTES.length * .19 + .5;
+    const o = ac.createOscillator(), lfo = ac.createOscillator(), lg = ac.createGain(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = 2900;
+    lfo.frequency.value = 28; lg.gain.value = 70;
+    lfo.connect(lg).connect(o.frequency);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(.05, t + .03);
+    g.gain.setValueAtTime(.05, t + .65);
+    g.gain.linearRampToValueAtTime(0, t + .75);
+    o.connect(g).connect(sfxOut);
+    o.start(t); lfo.start(t); o.stop(t + .8); lfo.stop(t + .8);
+  }
+  // ドアの開け閉め（ぷしゅー と、ピンポン）
+  function doorSound(open) {
+    if (!ac) return;
+    const t = ac.currentTime + .01;
+    hiss(t, .7, 2400, .06, .6);
+    [0, .45].forEach((s, k) => { if (open && k) return; ding(t + s, 1319, .5, { type: 'sine', vol: .09 }); ding(t + s + .22, 1047, .7, { type: 'sine', vol: .09 }); });
+  }
+  async function stationRound() {
+    const my = flow;
+    const t = pick(STATION_TRAINS);
+    const n = Math.min(t.cars, 5);
+    $('#people').innerHTML = '';
+    spawnWaiting();
+    await say(`まもなく、${t.ann}が　まいります。`);
+    if (my !== flow) return;
+    // 入ってきて、だんだん ゆっくりになって止まる（まん中の車両が画面のまん中）
+    const tr = makeTrain(t, -1, { cars: n });
+    stTrain = tr;
+    addDoors(tr);
+    const k = Math.floor(n / 2);
+    const stopX = G.W / 2 - k * (tr.w + tr.gap) - tr.w / 2;
+    tr.acc = tr.speed * tr.speed / (2 * Math.max(1, tr.x - stopX));
+    let onStop;
+    const stopped = new Promise(res => { onStop = res; });
+    let halted = false;
+    tr.move = (o, dt) => {
+      if (halted) { o.v = 0; return o.x; }
+      o.v = Math.min(o.speed, Math.max(o.h * .25, Math.sqrt(2 * o.acc * Math.max(0, o.x - stopX))));
+      const nx = o.x - o.v * dt;
+      if (nx <= stopX) { halted = true; o.v = 0; onStop(); return stopX; }
+      return nx;
+    };
+    tr.onTap = () => stationPoke('train');
+    const gone = runTrain(tr, { onEnter: () => { if (t.deco === 'ghost') ghostSound(); else trainHorn(.5); } });
+    await stopped;
+    if (my !== flow) return;
+    if (ac) hiss(ac.currentTime + .05, 1.4, 2600, .07, .5);
+    if (!seen.has(t.id)) { seen.add(t.id); saveSeen(); }
+    // ドアを あける
+    await waitStation('open', P.arrive, () => doorHint(tr, true));
+    if (my !== flow) return;
+    doorHint(tr, false);
+    tr.el.classList.add('open');
+    doorSound(true);
+    await wait(900);
+    if (my !== flow) return;
+    // おりる人が さき
+    if (alight(tr)) { say(P.oriru); await wait(2600); }
+    if (my !== flow) return;
+    // ときどき、奥の線路を とっきゅうが 通過する
+    if (Math.random() < .35) setTimeout(() => {
+      if (my !== flow) return;
+      say(P.passing);
+      runTrain(makeTrain(TRAIN.tokkyu, 1, { speed: 2.4 }));
+    }, 2500);
+    await waitStation('board', P.board, () => waiting.forEach((a, i) => setTimeout(() => bounce(a.el), i * 150)));
+    if (my !== flow) return;
+    // ドアを しめる
+    await waitStation('close', P.close, () => doorHint(tr, true));
+    if (my !== flow) return;
+    doorHint(tr, false);
+    tr.el.classList.remove('open');
+    doorSound(false);
+    say(P.closing);
+    await wait(1400);
+    if (my !== flow) return;
+    // 発車ベルの ボタン
+    const btn = $('#goBtn');
+    btn.hidden = false;
+    // 縦長の画面ではホームのまん中（字幕より上）、横長の画面では左がわ（字幕のよこ）に出す
+    const bw = btn.offsetWidth, top0 = G.platY + G.carH * .3;
+    const wide = G.W > G.H * 1.3, bottom0 = wide ? G.H - 16 : G.H - 84;
+    btn.style.left = `${f1(wide ? Math.max(24, G.W * .06) : (G.W - bw) / 2)}px`;
+    btn.style.top = `${f1(Math.max(top0, (top0 + bottom0 - bw) / 2))}px`;
+    await waitStation('go', P.pushGo);
+    btn.hidden = true;
+    if (my !== flow) return;
+    departBell();
+    await wait(3300);
+    if (my !== flow) return;
+    say(P.shinko);
+    trainHorn(.8);
+    tr.move = (o, dt) => { o.v = Math.min(o.speed * 1.3, o.v + o.speed * .45 * dt); return o.x - o.v * dt; };
+    await wait(1800);
+    if (my === flow) say(P.bye2);
+    await gone;
+  }
+
   // ---------- でんしゃずかん ----------
   function goZukan(back) {
     show('zukan');
@@ -1929,6 +2271,7 @@
   });
   document.querySelectorAll('[data-home]').forEach(b => b.addEventListener('click', () => { sfx.tap(); goHome(); }));
   $('#askAgain').addEventListener('click', () => { sfx.tap(); if (askAgain) askAgain(); });
+  $('#goBtn').addEventListener('click', () => stationPoke('btn'));
   $('#seenPill').addEventListener('click', () => { sfx.tap(); goZukan('free'); });
   $('#bgmBtn').addEventListener('click', () => {
     unlockAudio();
@@ -1942,6 +2285,7 @@
     const m = b.dataset.mode;
     if (m === 'free') goFree();
     else if (m === 'count') goCount();
+    else if (m === 'station') goStation();
     else goZukan('home');
   }));
 
@@ -2041,6 +2385,7 @@
     };
     Object.keys(P).forEach(k => add(P[k]));
     TRAINS.forEach(t => add(t.line));
+    STATION_TRAINS.forEach(t => add(`まもなく、${t.ann}が　まいります。`));
     COUNT.forEach(c => add(`${c}！`));
     RYO.forEach(c => add(`${c}！`));
     PRAISE.forEach(p => add(p[1]));
